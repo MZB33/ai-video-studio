@@ -1,0 +1,19 @@
+[Unit]
+Description=AI Video App managed by PM2
+After=network.target
+
+[Service]
+Type=forking
+User=www-data
+Environment=PATH=/usr/bin:/usr/local/bin:/bin
+Environment=NODE_ENV=production
+WorkingDirectory=/var/www/ai-video-app
+ExecStart=/usr/bin/env pm2 start /var/www/ai-video-app/ecosystem.config.js --env production --update-env
+ExecReload=/usr/bin/env pm2 reload /var/www/ai-video-app/ecosystem.config.js --env production
+ExecStop=/usr/bin/env pm2 stop /var/www/ai-video-app/ecosystem.config.js
+Restart=always
+RestartSec=10s
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

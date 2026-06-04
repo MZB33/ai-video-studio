@@ -1,0 +1,6 @@
+// Inside daily-tools subTools array, add:
+
+{ id: "pdf-tools", name: "PDF Tools", nameUr: "PDF ٹولز", icon: "📄", href: "/tools/pdf", badge: "free" },
+{ id: "password-generator", name: "Password Generator", nameUr: "پاسورڈ جنریٹر", icon: "🔐", href: "/tools/password", badge: "free" },
+{ id: "unit-converter", name: "Unit Converter", nameUr: "یونٹ کنورٹر", icon: "📐", href: "/tools/unit-converter", badge: "free" },
+{ id: "qr-code", name: "QR Code Generator", nameUr: "QR کوڈ جنریٹر", icon: "📱", href: "/tools/qr-code", badge: "free" },
