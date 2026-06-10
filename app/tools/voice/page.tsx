@@ -97,41 +97,39 @@ const voices: VoiceType[] = [
   { id: "ar-sa-man-2", name: "Omar (Deep)", nameUr: "عمر (گہری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "deep", language: "Arabic", accent: "Saudi", speed: 0.9, pitch: 0.85 },
   { id: "ar-sa-woman-1", name: "Fatima (Warm)", nameUr: "فاطمہ (نرم)", gender: "female", age: "adult", emotion: "neutral", voiceType: "soft", language: "Arabic", accent: "Saudi", speed: 1, pitch: 1.15 },
 
-  // ========== ADDITIONAL EMOTIONAL VOICES (Crying, Mixed, Fearful) ==========
+  // ========== ADDITIONAL EMOTIONAL VOICES ==========
   { id: "special-crying-man", name: "Crying Man", nameUr: "رونے والا آدمی", gender: "male", age: "adult", emotion: "crying", voiceType: "rough", language: "English", accent: "American", speed: 0.8, pitch: 0.9 },
   { id: "special-crying-woman", name: "Crying Woman", nameUr: "رونے والی عورت", gender: "female", age: "adult", emotion: "crying", voiceType: "soft", language: "English", accent: "American", speed: 0.85, pitch: 1 },
   { id: "special-crying-boy", name: "Crying Boy", nameUr: "رونے والا لڑکا", gender: "boy", age: "child", emotion: "crying", voiceType: "thin", language: "English", accent: "American", speed: 0.9, pitch: 1.2 },
   { id: "special-crying-girl", name: "Crying Girl", nameUr: "رونے والی لڑکی", gender: "girl", age: "child", emotion: "crying", voiceType: "thin", language: "English", accent: "American", speed: 0.9, pitch: 1.25 },
-  
   { id: "special-mixed-man", name: "Mixed Emotions (Man)", nameUr: "ملے جلے جذبات (آدمی)", gender: "male", age: "adult", emotion: "mixed", voiceType: "rough", language: "English", accent: "American", speed: 1, pitch: 1 },
   { id: "special-mixed-woman", name: "Mixed Emotions (Woman)", nameUr: "ملے جلے جذبات (عورت)", gender: "female", age: "adult", emotion: "mixed", voiceType: "soft", language: "English", accent: "American", speed: 1, pitch: 1.05 },
-
   { id: "special-fearful-man", name: "Fearful Man", nameUr: "خوفزدہ آدمی", gender: "male", age: "adult", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.1, pitch: 1.1 },
   { id: "special-fearful-woman", name: "Fearful Woman", nameUr: "خوفزدہ عورت", gender: "female", age: "adult", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.15, pitch: 1.2 },
   { id: "special-fearful-boy", name: "Fearful Boy", nameUr: "خوفزدہ لڑکا", gender: "boy", age: "child", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.2, pitch: 1.3 },
   { id: "special-fearful-girl", name: "Fearful Girl", nameUr: "خوفزدہ لڑکی", gender: "girl", age: "child", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.2, pitch: 1.35 },
 
-  // ========== THICK VOICES (Heavy, Deep) ==========
+  // ========== THICK VOICES ==========
   { id: "thick-man-1", name: "Thick Heavy Voice", nameUr: "بھاری آواز", gender: "male", age: "adult", emotion: "neutral", voiceType: "thick", language: "English", accent: "American", speed: 0.85, pitch: 0.7 },
   { id: "thick-man-2", name: "Thick Deep Voice", nameUr: "گہری بھاری آواز", gender: "male", age: "adult", emotion: "neutral", voiceType: "thick", language: "English", accent: "American", speed: 0.8, pitch: 0.65 },
 
-  // ========== THIN VOICES (Light, High) ==========
+  // ========== THIN VOICES ==========
   { id: "thin-woman-1", name: "Thin Light Voice", nameUr: "ہلکی آواز", gender: "female", age: "adult", emotion: "neutral", voiceType: "thin", language: "English", accent: "American", speed: 1.1, pitch: 1.3 },
   { id: "thin-boy-1", name: "Thin Child Voice", nameUr: "بچوں والی ہلکی آواز", gender: "boy", age: "child", emotion: "happy", voiceType: "thin", language: "English", accent: "American", speed: 1.2, pitch: 1.4 },
 ];
 
 // ============================================================
-// VOICE STUDIO COMPONENT
+// VOICE STUDIO COMPONENT (WITH BROWSER SPEECH SYNTHESIS)
 // ============================================================
 
 export default function VoiceStudioPage() {
   const router = useRouter();
   const [text, setText] = useState("");
   const [selectedVoice, setSelectedVoice] = useState(voices[0]);
-  const [audioUrl, setAudioUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
   // Filters
   const [genderFilter, setGenderFilter] = useState<string>("all");
@@ -153,38 +151,73 @@ export default function VoiceStudioPage() {
     return true;
   });
 
-  const generateVoice = async () => {
+  // Function to stop any ongoing speech
+  const stopSpeech = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  // Generate voice using browser's Speech Synthesis API
+  const generateVoice = () => {
     if (!text.trim()) {
       setError("Please enter some text");
       return;
     }
 
+    // Stop any ongoing speech
+    stopSpeech();
+
+    // Check if browser supports speech synthesis
+    if (!('speechSynthesis' in window)) {
+      setError("Your browser does not support speech synthesis. Please use Chrome, Edge, or Safari.");
+      return;
+    }
+
     setLoading(true);
     setError("");
-    setAudioUrl("");
+    setSuccessMsg("");
 
     try {
-      const res = await fetch("/api/voice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          text, 
-          voice: selectedVoice.id,
-          emotion: selectedVoice.emotion,
-          speed: selectedVoice.speed,
-          pitch: selectedVoice.pitch
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Voice generation failed");
+      const utterance = new SpeechSynthesisUtterance(text);
       
-      setAudioUrl(data.audio);
-      setSuccessMsg(`🎤 Voice generated with ${selectedVoice.name} voice!`);
-      setTimeout(() => setSuccessMsg(""), 3000);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setError(message);
-    } finally {
+      // Set language based on selected voice
+      let lang = "en-US";
+      if (selectedVoice.language === "Urdu") lang = "ur-PK";
+      else if (selectedVoice.language === "Hindi") lang = "hi-IN";
+      else if (selectedVoice.language === "Arabic") lang = "ar-SA";
+      else lang = "en-US";
+      
+      utterance.lang = lang;
+      utterance.rate = selectedVoice.speed;
+      utterance.pitch = selectedVoice.pitch;
+      utterance.volume = 1;
+      
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setLoading(false);
+        setSuccessMsg(`🎤 Speaking with ${selectedVoice.name} voice...`);
+        setTimeout(() => setSuccessMsg(""), 3000);
+      };
+      
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setSuccessMsg(`✅ Voice generation complete!`);
+        setTimeout(() => setSuccessMsg(""), 2000);
+      };
+      
+      utterance.onerror = (event) => {
+        console.error("Speech synthesis error:", event);
+        setIsSpeaking(false);
+        setError("Speech generation failed. Please try again.");
+        setLoading(false);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+      
+    } catch (err) {
+      setError("Failed to generate speech. Please try again.");
       setLoading(false);
     }
   };
@@ -195,8 +228,9 @@ export default function VoiceStudioPage() {
 
   const clearAll = () => {
     setText("");
-    setAudioUrl("");
     setError("");
+    setSuccessMsg("");
+    stopSpeech();
   };
 
   const getEmotionIcon = (emotion: string) => {
@@ -242,6 +276,9 @@ export default function VoiceStudioPage() {
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button onClick={loadExample} style={{ padding: "0.25rem 0.75rem", fontSize: "0.7rem", background: "#8b5cf6", color: "white", border: "none", borderRadius: 40, cursor: "pointer" }}>📖 Example</button>
             <button onClick={clearAll} style={{ padding: "0.25rem 0.75rem", fontSize: "0.7rem", background: "#ef4444", color: "white", border: "none", borderRadius: 40, cursor: "pointer" }}>Clear</button>
+            {isSpeaking && (
+              <button onClick={stopSpeech} style={{ padding: "0.25rem 0.75rem", fontSize: "0.7rem", background: "#f59e0b", color: "white", border: "none", borderRadius: 40, cursor: "pointer" }}>⏹️ Stop</button>
+            )}
           </div>
         </div>
 
@@ -289,52 +326,4 @@ export default function VoiceStudioPage() {
             <option value="deep">🎻 Deep</option>
             <option value="soft">🍃 Soft</option>
             <option value="rough">🔥 Rough</option>
-            <option value="melodic">🎶 Melodic</option>
-          </select>
-
-          <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)} style={{ padding: "0.25rem 0.5rem", borderRadius: 40, border: "1px solid #e0e0e0", fontSize: "0.7rem" }}>
-            <option value="all">👤 All Ages</option>
-            <option value="child">🧒 Child</option>
-            <option value="young">🧑 Young</option>
-            <option value="adult">👨 Adult</option>
-            <option value="senior">👴 Senior</option>
-          </select>
-        </div>
-
-        {/* Voice List */}
-        <div style={{ marginBottom: "1rem", maxHeight: 300, overflowY: "auto", border: "1px solid #e0e0e0", borderRadius: 16, padding: "0.5rem" }}>
-          <div style={{ fontSize: "0.7rem", color: "#999", marginBottom: "0.5rem" }}>{filteredVoices.length} voices available</div>
-          {filteredVoices.map((voice) => (
-            <button key={voice.id} onClick={() => setSelectedVoice(voice)} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.25rem", borderRadius: 12, background: selectedVoice.id === voice.id ? "#667eea" : "#f5f5f5", color: selectedVoice.id === voice.id ? "white" : "#333", border: "none", cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 500 }}>{getGenderIcon(voice.gender)} {voice.name}</div>
-                <div style={{ fontSize: "0.6rem", opacity: 0.7 }}>{voice.nameUr}</div>
-                <div style={{ fontSize: "0.55rem" }}>{getEmotionIcon(voice.emotion)} {voice.emotion} • {voice.voiceType} • {voice.accent}</div>
-              </div>
-              {selectedVoice.id === voice.id && <span style={{ fontSize: "1rem" }}>✅</span>}
-            </button>
-          ))}
-        </div>
-
-        <button onClick={generateVoice} disabled={loading || !text} style={{ width: "100%", padding: "0.875rem", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", border: "none", borderRadius: 40, fontSize: "1rem", fontWeight: 600, cursor: loading || !text ? "not-allowed" : "pointer", opacity: loading || !text ? 0.6 : 1 }}>
-          {loading ? "🎤 Generating voice..." : `🎙️ Generate with ${selectedVoice.name}`}
-        </button>
-      </div>
-
-      {audioUrl && (
-        <div style={{ background: "rgba(255,255,255,0.95)", borderRadius: 24, padding: "1.5rem", textAlign: "center" }}>
-          <audio controls src={audioUrl} style={{ width: "100%", marginBottom: "1rem" }} />
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <a href={audioUrl} download style={{ padding: "0.5rem 1rem", background: "#10b981", color: "white", textDecoration: "none", borderRadius: 40, fontSize: "0.8rem" }}>💾 Download Audio</a>
-            <button onClick={() => { navigator.clipboard.writeText(audioUrl); setSuccessMsg("📋 Audio URL copied!"); setTimeout(() => setSuccessMsg(""), 2000); }} style={{ padding: "0.5rem 1rem", background: "#3b82f6", color: "white", border: "none", borderRadius: 40, fontSize: "0.8rem", cursor: "pointer" }}>📋 Copy URL</button>
-          </div>
-        </div>
-      )}
-
-      {error && <div style={{ marginTop: "1rem", padding: "0.75rem", background: "rgba(239,68,68,0.1)", borderRadius: 12, color: "#ef4444", textAlign: "center" }}>❌ {error}</div>}
-      {successMsg && <div style={{ marginTop: "1rem", padding: "0.75rem", background: "rgba(34,197,94,0.1)", borderRadius: 12, color: "#22c55e", textAlign: "center" }}>✅ {successMsg}</div>}
-
-      <BottomNav active="tools" onNavigate={(href) => router.push(href)} />
-    </div>
-  );
-}
+            <option value="melodic">🎶 Mel
