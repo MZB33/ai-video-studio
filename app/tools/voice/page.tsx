@@ -304,47 +304,48 @@ export default function VoiceStudioPage() {
 
   // ── generate ─────────────────────────────────────────────
   const generate = async () => {
-    if (!text.trim()) { setError(t.errorText); return; }
-    setLoading(true); setError(""); setAudioUrl("");
-    setProgress(0);
+  if (!text.trim()) { setError(t.errorText); return; }
+  setLoading(true); setError(""); setAudioUrl("");
+  setProgress(0);
 
-    const timer = setInterval(() => setProgress(p => Math.min(p + 8, 85)), 300);
+  const timer = setInterval(() => setProgress(p => Math.min(p + 8, 85)), 300);
 
-    try {
-      const body = {
-        text,
-        voice: selectedVoice.id,
-        emotion: selectedVoice.emotion,
-        speed:  useCustom ? customSpeed : selectedVoice.speed,
-        pitch:  useCustom ? customPitch : selectedVoice.pitch,
-        language,
-      };
-      const res  = await fetch("/api/voice", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Voice generation failed");
-      clearInterval(timer); setProgress(100);
-      
-      if (data.useBrowserSpeech) {
-        // Use browser speech synthesis for English
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = data.lang;
-        utterance.rate = data.speed;
-        utterance.pitch = data.pitch;
-        window.speechSynthesis.speak(utterance);
-        setAudioUrl("");
-        showToast(`🎤 Speaking with ${selectedVoice.name}...`);
-      } else {
-        setAudioUrl(data.audio);
-        setActiveTab("output");
-        showToast(`✅ ${t.voiceReady} ${selectedVoice.name}`);
-      }
-    } catch (e) {
-      clearInterval(timer);
-      setError(e instanceof Error ? e.message : "Generation failed");
-    } finally {
-      setLoading(false);
+  try {
+    const body = {
+      text,
+      voice: selectedVoice.id,
+      emotion: selectedVoice.emotion,
+      speed: useCustom ? customSpeed : selectedVoice.speed,
+      pitch: useCustom ? customPitch : selectedVoice.pitch,
+      language,
+    };
+    const res = await fetch("/api/voice", { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify(body) 
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Voice generation failed");
+    
+    clearInterval(timer); 
+    setProgress(100);
+    
+    // Set the audio URL for playback
+    if (data.audio) {
+      setAudioUrl(data.audio);
+      setActiveTab("output");
+      showToast(`✅ ${t.voiceReady} ${selectedVoice.name}`);
+    } else {
+      throw new Error("No audio received");
     }
-  };
+    
+  } catch (e) {
+    clearInterval(timer);
+    setError(e instanceof Error ? e.message : "Generation failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const clearAll = () => { setText(""); setAudioUrl(""); setError(""); setProgress(0); };
 
