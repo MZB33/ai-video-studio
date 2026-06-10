@@ -1,335 +1,133 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
 
-// ============================================================
-// COMPLETE VOICE DATABASE - 100+ VOICES
-// ============================================================
-
-type VoiceType = {
-  id: string;
-  name: string;
-  nameUr: string;
-  gender: "male" | "female" | "boy" | "girl";
-  age: "child" | "young" | "adult" | "senior";
-  emotion: "neutral" | "happy" | "sad" | "angry" | "fearful" | "excited" | "calm" | "whisper" | "loud" | "crying" | "mixed";
-  voiceType: "normal" | "thick" | "thin" | "deep" | "soft" | "sharp" | "melodic" | "rough" | "smooth";
-  language: string;
-  accent: string;
-  speed: number;
-  pitch: number;
-};
-
-// ============================================================
-// 100+ VOICES DATABASE
-// ============================================================
-
-const voices: VoiceType[] = [
-  // ========== ENGLISH VOICES - MEN ==========
-  { id: "en-us-man-1", name: "James (Professional)", nameUr: "جیمز (پیشہ ور)", gender: "male", age: "adult", emotion: "neutral", voiceType: "normal", language: "English", accent: "American", speed: 1, pitch: 1 },
-  { id: "en-us-man-2", name: "Michael (Deep)", nameUr: "مائیکل (گہری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "deep", language: "English", accent: "American", speed: 0.9, pitch: 0.8 },
-  { id: "en-us-man-3", name: "David (Happy)", nameUr: "ڈیوڈ (خوش)", gender: "male", age: "adult", emotion: "happy", voiceType: "melodic", language: "English", accent: "American", speed: 1.1, pitch: 1.1 },
-  { id: "en-us-man-4", name: "Robert (Angry)", nameUr: "رابرٹ (غصہ)", gender: "male", age: "adult", emotion: "angry", voiceType: "rough", language: "English", accent: "American", speed: 1.2, pitch: 0.9 },
-  { id: "en-us-man-5", name: "William (Sad)", nameUr: "ولیم (اداس)", gender: "male", age: "adult", emotion: "sad", voiceType: "soft", language: "English", accent: "American", speed: 0.8, pitch: 0.9 },
-  { id: "en-us-man-6", name: "John (Excited)", nameUr: "جان (پرجوش)", gender: "male", age: "adult", emotion: "excited", voiceType: "sharp", language: "English", accent: "American", speed: 1.3, pitch: 1.2 },
-  { id: "en-us-man-7", name: "Thomas (Calm)", nameUr: "تھامس (پرسکون)", gender: "male", age: "adult", emotion: "calm", voiceType: "smooth", language: "English", accent: "American", speed: 0.9, pitch: 1 },
-  { id: "en-us-man-8", name: "Charles (Whisper)", nameUr: "چارلس (سرگوشی)", gender: "male", age: "adult", emotion: "whisper", voiceType: "soft", language: "English", accent: "American", speed: 0.7, pitch: 0.9 },
-  { id: "en-us-man-9", name: "George (Loud)", nameUr: "جارج (بلند)", gender: "male", age: "adult", emotion: "loud", voiceType: "thick", language: "English", accent: "American", speed: 1.1, pitch: 1 },
-  { id: "en-uk-man-1", name: "Oliver (British)", nameUr: "اولیور (برطانوی)", gender: "male", age: "adult", emotion: "neutral", voiceType: "normal", language: "English", accent: "British", speed: 1, pitch: 1 },
-  { id: "en-uk-man-2", name: "Henry (PosH)", nameUr: "ہنری (واضع)", gender: "male", age: "adult", emotion: "neutral", voiceType: "smooth", language: "English", accent: "British", speed: 0.95, pitch: 1.05 },
-  { id: "en-au-man-1", name: "Jack (Australian)", nameUr: "جیک (آسٹریلوی)", gender: "male", age: "adult", emotion: "happy", voiceType: "melodic", language: "English", accent: "Australian", speed: 1.05, pitch: 1.05 },
-
-  // ========== ENGLISH VOICES - WOMEN ==========
-  { id: "en-us-woman-1", name: "Sophia (Warm)", nameUr: "صوفیہ (نرم)", gender: "female", age: "adult", emotion: "neutral", voiceType: "soft", language: "English", accent: "American", speed: 1, pitch: 1.1 },
-  { id: "en-us-woman-2", name: "Emma (Happy)", nameUr: "ایما (خوش)", gender: "female", age: "adult", emotion: "happy", voiceType: "melodic", language: "English", accent: "American", speed: 1.1, pitch: 1.2 },
-  { id: "en-us-woman-3", name: "Olivia (Sad)", nameUr: "اولیویا (اداس)", gender: "female", age: "adult", emotion: "sad", voiceType: "soft", language: "English", accent: "American", speed: 0.85, pitch: 1 },
-  { id: "en-us-woman-4", name: "Ava (Angry)", nameUr: "ایوا (غصہ)", gender: "female", age: "adult", emotion: "angry", voiceType: "sharp", language: "English", accent: "American", speed: 1.2, pitch: 1.15 },
-  { id: "en-us-woman-5", name: "Isabella (Excited)", nameUr: "ازابیلا (پرجوش)", gender: "female", age: "adult", emotion: "excited", voiceType: "thin", language: "English", accent: "American", speed: 1.3, pitch: 1.25 },
-  { id: "en-us-woman-6", name: "Mia (Calm)", nameUr: "میا (پرسکون)", gender: "female", age: "adult", emotion: "calm", voiceType: "smooth", language: "English", accent: "American", speed: 0.9, pitch: 1 },
-  { id: "en-us-woman-7", name: "Charlotte (Whisper)", nameUr: "شارلٹ (سرگوشی)", gender: "female", age: "adult", emotion: "whisper", voiceType: "soft", language: "English", accent: "American", speed: 0.7, pitch: 0.95 },
-  { id: "en-uk-woman-1", name: "Amelia (British)", nameUr: "امیلیا (برطانوی)", gender: "female", age: "adult", emotion: "neutral", voiceType: "smooth", language: "English", accent: "British", speed: 1, pitch: 1.05 },
-  { id: "en-au-woman-1", name: "Grace (Australian)", nameUr: "گریس (آسٹریلوی)", gender: "female", age: "adult", emotion: "happy", voiceType: "melodic", language: "English", accent: "Australian", speed: 1.05, pitch: 1.1 },
-
-  // ========== ENGLISH VOICES - BOYS ==========
-  { id: "en-us-boy-1", name: "Leo (Young Boy)", nameUr: "لیو (چھوٹا لڑکا)", gender: "boy", age: "child", emotion: "happy", voiceType: "thin", language: "English", accent: "American", speed: 1.1, pitch: 1.3 },
-  { id: "en-us-boy-2", name: "Mason (Sad)", nameUr: "میسن (اداس)", gender: "boy", age: "child", emotion: "sad", voiceType: "soft", language: "English", accent: "American", speed: 0.9, pitch: 1.2 },
-  { id: "en-us-boy-3", name: "Ethan (Excited)", nameUr: "ایتھن (پرجوش)", gender: "boy", age: "child", emotion: "excited", voiceType: "sharp", language: "English", accent: "American", speed: 1.3, pitch: 1.35 },
-  { id: "en-us-boy-4", name: "Noah (Calm)", nameUr: "نوح (پرسکون)", gender: "boy", age: "child", emotion: "calm", voiceType: "smooth", language: "English", accent: "American", speed: 0.95, pitch: 1.2 },
-
-  // ========== ENGLISH VOICES - GIRLS ==========
-  { id: "en-us-girl-1", name: "Lily (Little Girl)", nameUr: "للی (چھوٹی لڑکی)", gender: "girl", age: "child", emotion: "happy", voiceType: "thin", language: "English", accent: "American", speed: 1.15, pitch: 1.4 },
-  { id: "en-us-girl-2", name: "Chloe (Sad)", nameUr: "کلوئی (اداس)", gender: "girl", age: "child", emotion: "sad", voiceType: "soft", language: "English", accent: "American", speed: 0.9, pitch: 1.25 },
-  { id: "en-us-girl-3", name: "Ella (Excited)", nameUr: "ایلا (پرجوش)", gender: "girl", age: "child", emotion: "excited", voiceType: "melodic", language: "English", accent: "American", speed: 1.3, pitch: 1.4 },
-  { id: "en-us-girl-4", name: "Aria (Whisper)", nameUr: "آریا (سرگوشی)", gender: "girl", age: "child", emotion: "whisper", voiceType: "soft", language: "English", accent: "American", speed: 0.8, pitch: 1.3 },
-
-  // ========== URDU VOICES - MEN ==========
-  { id: "ur-pk-man-1", name: "Asad (Standard)", nameUr: "اسد (معیاری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "normal", language: "Urdu", accent: "Pakistani", speed: 1, pitch: 1 },
-  { id: "ur-pk-man-2", name: "Bilal (Deep)", nameUr: "بلال (گہری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "deep", language: "Urdu", accent: "Pakistani", speed: 0.9, pitch: 0.85 },
-  { id: "ur-pk-man-3", name: "Hamza (Happy)", nameUr: "حمزہ (خوش)", gender: "male", age: "adult", emotion: "happy", voiceType: "melodic", language: "Urdu", accent: "Pakistani", speed: 1.1, pitch: 1.1 },
-  { id: "ur-pk-man-4", name: "Zain (Angry)", nameUr: "زین (غصہ)", gender: "male", age: "adult", emotion: "angry", voiceType: "rough", language: "Urdu", accent: "Pakistani", speed: 1.2, pitch: 0.95 },
-  { id: "ur-pk-man-5", name: "Omar (Sad)", nameUr: "عمر (اداس)", gender: "male", age: "adult", emotion: "sad", voiceType: "soft", language: "Urdu", accent: "Pakistani", speed: 0.85, pitch: 0.95 },
-
-  // ========== URDU VOICES - WOMEN ==========
-  { id: "ur-pk-woman-1", name: "Ayesha (Warm)", nameUr: "عائشہ (نرم)", gender: "female", age: "adult", emotion: "neutral", voiceType: "soft", language: "Urdu", accent: "Pakistani", speed: 1, pitch: 1.15 },
-  { id: "ur-pk-woman-2", name: "Fatima (Happy)", nameUr: "فاطمہ (خوش)", gender: "female", age: "adult", emotion: "happy", voiceType: "melodic", language: "Urdu", accent: "Pakistani", speed: 1.1, pitch: 1.2 },
-  { id: "ur-pk-woman-3", name: "Sana (Sad)", nameUr: "ثنا (اداس)", gender: "female", age: "adult", emotion: "sad", voiceType: "soft", language: "Urdu", accent: "Pakistani", speed: 0.9, pitch: 1.1 },
-  { id: "ur-pk-woman-4", name: "Zara (Excited)", nameUr: "زارا (پرجوش)", gender: "female", age: "adult", emotion: "excited", voiceType: "thin", language: "Urdu", accent: "Pakistani", speed: 1.25, pitch: 1.25 },
-
-  // ========== URDU VOICES - BOYS ==========
-  { id: "ur-pk-boy-1", name: "Ali (Young Boy)", nameUr: "علی (چھوٹا لڑکا)", gender: "boy", age: "child", emotion: "happy", voiceType: "thin", language: "Urdu", accent: "Pakistani", speed: 1.15, pitch: 1.35 },
-  { id: "ur-pk-boy-2", name: "Hassan (Sad)", nameUr: "حسن (اداس)", gender: "boy", age: "child", emotion: "sad", voiceType: "soft", language: "Urdu", accent: "Pakistani", speed: 0.95, pitch: 1.25 },
-
-  // ========== URDU VOICES - GIRLS ==========
-  { id: "ur-pk-girl-1", name: "Amina (Little Girl)", nameUr: "آمنہ (چھوٹی لڑکی)", gender: "girl", age: "child", emotion: "happy", voiceType: "thin", language: "Urdu", accent: "Pakistani", speed: 1.15, pitch: 1.4 },
-  { id: "ur-pk-girl-2", name: "Hira (Excited)", nameUr: "ہیرہ (پرجوش)", gender: "girl", age: "child", emotion: "excited", voiceType: "melodic", language: "Urdu", accent: "Pakistani", speed: 1.3, pitch: 1.45 },
-
-  // ========== HINDI VOICES ==========
-  { id: "hi-in-man-1", name: "Raj (Standard)", nameUr: "راج (معیاری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "normal", language: "Hindi", accent: "Indian", speed: 1, pitch: 1 },
-  { id: "hi-in-man-2", name: "Vikram (Deep)", nameUr: "وکرم (گہری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "deep", language: "Hindi", accent: "Indian", speed: 0.9, pitch: 0.85 },
-  { id: "hi-in-man-3", name: "Rahul (Happy)", nameUr: "راہل (خوش)", gender: "male", age: "adult", emotion: "happy", voiceType: "melodic", language: "Hindi", accent: "Indian", speed: 1.1, pitch: 1.1 },
-  { id: "hi-in-woman-1", name: "Priya (Warm)", nameUr: "پریا (نرم)", gender: "female", age: "adult", emotion: "neutral", voiceType: "soft", language: "Hindi", accent: "Indian", speed: 1, pitch: 1.15 },
-  { id: "hi-in-woman-2", name: "Neha (Happy)", nameUr: "نہا (خوش)", gender: "female", age: "adult", emotion: "happy", voiceType: "melodic", language: "Hindi", accent: "Indian", speed: 1.1, pitch: 1.2 },
-
-  // ========== ARABIC VOICES ==========
-  { id: "ar-sa-man-1", name: "Ahmed (Standard)", nameUr: "احمد (معیاری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "normal", language: "Arabic", accent: "Saudi", speed: 1, pitch: 1 },
-  { id: "ar-sa-man-2", name: "Omar (Deep)", nameUr: "عمر (گہری)", gender: "male", age: "adult", emotion: "neutral", voiceType: "deep", language: "Arabic", accent: "Saudi", speed: 0.9, pitch: 0.85 },
-  { id: "ar-sa-woman-1", name: "Fatima (Warm)", nameUr: "فاطمہ (نرم)", gender: "female", age: "adult", emotion: "neutral", voiceType: "soft", language: "Arabic", accent: "Saudi", speed: 1, pitch: 1.15 },
-
-  // ========== ADDITIONAL EMOTIONAL VOICES (Crying, Mixed, Fearful) ==========
-  { id: "special-crying-man", name: "Crying Man", nameUr: "رونے والا آدمی", gender: "male", age: "adult", emotion: "crying", voiceType: "rough", language: "English", accent: "American", speed: 0.8, pitch: 0.9 },
-  { id: "special-crying-woman", name: "Crying Woman", nameUr: "رونے والی عورت", gender: "female", age: "adult", emotion: "crying", voiceType: "soft", language: "English", accent: "American", speed: 0.85, pitch: 1 },
-  { id: "special-crying-boy", name: "Crying Boy", nameUr: "رونے والا لڑکا", gender: "boy", age: "child", emotion: "crying", voiceType: "thin", language: "English", accent: "American", speed: 0.9, pitch: 1.2 },
-  { id: "special-crying-girl", name: "Crying Girl", nameUr: "رونے والی لڑکی", gender: "girl", age: "child", emotion: "crying", voiceType: "thin", language: "English", accent: "American", speed: 0.9, pitch: 1.25 },
-  
-  { id: "special-mixed-man", name: "Mixed Emotions (Man)", nameUr: "ملے جلے جذبات (آدمی)", gender: "male", age: "adult", emotion: "mixed", voiceType: "rough", language: "English", accent: "American", speed: 1, pitch: 1 },
-  { id: "special-mixed-woman", name: "Mixed Emotions (Woman)", nameUr: "ملے جلے جذبات (عورت)", gender: "female", age: "adult", emotion: "mixed", voiceType: "soft", language: "English", accent: "American", speed: 1, pitch: 1.05 },
-
-  { id: "special-fearful-man", name: "Fearful Man", nameUr: "خوفزدہ آدمی", gender: "male", age: "adult", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.1, pitch: 1.1 },
-  { id: "special-fearful-woman", name: "Fearful Woman", nameUr: "خوفزدہ عورت", gender: "female", age: "adult", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.15, pitch: 1.2 },
-  { id: "special-fearful-boy", name: "Fearful Boy", nameUr: "خوفزدہ لڑکا", gender: "boy", age: "child", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.2, pitch: 1.3 },
-  { id: "special-fearful-girl", name: "Fearful Girl", nameUr: "خوفزدہ لڑکی", gender: "girl", age: "child", emotion: "fearful", voiceType: "thin", language: "English", accent: "American", speed: 1.2, pitch: 1.35 },
-
-  // ========== THICK VOICES (Heavy, Deep) ==========
-  { id: "thick-man-1", name: "Thick Heavy Voice", nameUr: "بھاری آواز", gender: "male", age: "adult", emotion: "neutral", voiceType: "thick", language: "English", accent: "American", speed: 0.85, pitch: 0.7 },
-  { id: "thick-man-2", name: "Thick Deep Voice", nameUr: "گہری بھاری آواز", gender: "male", age: "adult", emotion: "neutral", voiceType: "thick", language: "English", accent: "American", speed: 0.8, pitch: 0.65 },
-
-  // ========== THIN VOICES (Light, High) ==========
-  { id: "thin-woman-1", name: "Thin Light Voice", nameUr: "ہلکی آواز", gender: "female", age: "adult", emotion: "neutral", voiceType: "thin", language: "English", accent: "American", speed: 1.1, pitch: 1.3 },
-  { id: "thin-boy-1", name: "Thin Child Voice", nameUr: "بچوں والی ہلکی آواز", gender: "boy", age: "child", emotion: "happy", voiceType: "thin", language: "English", accent: "American", speed: 1.2, pitch: 1.4 },
+// Voice options
+const voices = [
+  { id: "en-us-1", name: "American English", nameUr: "امریکی انگریزی", code: "en-US" },
+  { id: "en-uk-1", name: "British English", nameUr: "برطانوی انگریزی", code: "en-GB" },
+  { id: "ur-pk-1", name: "Urdu (Pakistan)", nameUr: "اردو (پاکستان)", code: "ur-PK" },
+  { id: "hi-in-1", name: "Hindi (India)", nameUr: "ہندی (بھارت)", code: "hi-IN" },
+  { id: "ar-sa-1", name: "Arabic (Saudi)", nameUr: "عربی (سعودی)", code: "ar-SA" },
 ];
-
-// ============================================================
-// VOICE STUDIO COMPONENT
-// ============================================================
 
 export default function VoiceStudioPage() {
   const router = useRouter();
   const [text, setText] = useState("");
   const [selectedVoice, setSelectedVoice] = useState(voices[0]);
-  const [audioUrl, setAudioUrl] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  
-  // Filters
-  const [genderFilter, setGenderFilter] = useState<string>("all");
-  const [emotionFilter, setEmotionFilter] = useState<string>("all");
-  const [languageFilter, setLanguageFilter] = useState<string>("all");
-  const [voiceTypeFilter, setVoiceTypeFilter] = useState<string>("all");
-  const [ageFilter, setAgeFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const getVoicesCount = () => voices.length;
-
-  const filteredVoices = voices.filter(voice => {
-    if (genderFilter !== "all" && voice.gender !== genderFilter) return false;
-    if (emotionFilter !== "all" && voice.emotion !== emotionFilter) return false;
-    if (languageFilter !== "all" && voice.language !== languageFilter) return false;
-    if (voiceTypeFilter !== "all" && voice.voiceType !== voiceTypeFilter) return false;
-    if (ageFilter !== "all" && voice.age !== ageFilter) return false;
-    if (searchQuery && !voice.name.toLowerCase().includes(searchQuery.toLowerCase()) && !voice.nameUr.includes(searchQuery)) return false;
-    return true;
-  });
-
-  const generateVoice = async () => {
+  // Simple working speech synthesis
+  const speak = () => {
     if (!text.trim()) {
       setError("Please enter some text");
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setAudioUrl("");
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
 
-    try {
-      const res = await fetch("/api/voice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          text, 
-          voice: selectedVoice.id,
-          emotion: selectedVoice.emotion,
-          speed: selectedVoice.speed,
-          pitch: selectedVoice.pitch
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Voice generation failed");
-      
-      setAudioUrl(data.audio);
-      setSuccessMsg(`🎤 Voice generated with ${selectedVoice.name} voice!`);
-      setTimeout(() => setSuccessMsg(""), 3000);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = selectedVoice.code;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setSuccessMsg(`🔊 Speaking in ${selectedVoice.name}...`);
+      setTimeout(() => setSuccessMsg(""), 2000);
+    };
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSuccessMsg(`✅ Done!`);
+      setTimeout(() => setSuccessMsg(""), 1500);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setError("Speech failed. Try again.");
+    };
+    
+    window.speechSynthesis.speak(utterance);
+    setError("");
+  };
+
+  const stop = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setSuccessMsg("⏹️ Stopped");
+    setTimeout(() => setSuccessMsg(""), 1000);
   };
 
   const loadExample = () => {
-    setText("Welcome to AI Video Studio. Transform your ideas into reality with artificial intelligence. This is your creative companion for all your media needs.");
+    setText("Welcome to AI Video Studio. This is your creative companion for all your media needs.");
   };
 
   const clearAll = () => {
     setText("");
-    setAudioUrl("");
     setError("");
-  };
-
-  const getEmotionIcon = (emotion: string) => {
-    switch(emotion) {
-      case "happy": return "😊";
-      case "sad": return "😢";
-      case "angry": return "😠";
-      case "fearful": return "😨";
-      case "excited": return "🤩";
-      case "calm": return "😌";
-      case "whisper": return "🤫";
-      case "loud": return "📢";
-      case "crying": return "😭";
-      case "mixed": return "😶";
-      default: return "😐";
-    }
-  };
-
-  const getGenderIcon = (gender: string) => {
-    switch(gender) {
-      case "male": return "👨";
-      case "female": return "👩";
-      case "boy": return "👦";
-      case "girl": return "👧";
-      default: return "👤";
-    }
+    setSuccessMsg("");
+    stop();
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", padding: "1rem 1rem 80px 1rem" }}>
       <div style={{ marginBottom: "1.5rem", paddingTop: "1rem" }}>
         <button onClick={() => router.back()} style={{ background: "rgba(255,255,255,0.2)", border: "none", padding: "8px 16px", borderRadius: 40, color: "white", cursor: "pointer", marginBottom: "1rem" }}>← Back</button>
-        <h1 style={{ color: "white", margin: 0, fontSize: "1.8rem" }}>🎤 Voice Studio Pro</h1>
-        <p style={{ color: "rgba(255,255,255,0.8)", marginTop: "0.25rem" }}>{getVoicesCount()}+ realistic voices • Men • Women • Boys • Girls • 10+ emotions • 5+ languages</p>
+        <h1 style={{ color: "white", margin: 0, fontSize: "1.8rem" }}>🎤 Voice Studio</h1>
+        <p style={{ color: "rgba(255,255,255,0.8)", marginTop: "0.25rem" }}>Type text and click Speak — it works!</p>
       </div>
 
-      <div style={{ background: "rgba(255,255,255,0.95)", borderRadius: 24, padding: "1.5rem", marginBottom: "1.5rem" }}>
-        <label style={{ fontWeight: 600, marginBottom: "0.5rem", display: "block" }}>📝 Text to Speak</label>
-        <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, 2000))} placeholder="Enter text to convert to speech..." rows={4} style={{ width: "100%", padding: "1rem", fontSize: "1rem", borderRadius: 16, border: "1px solid #e0e0e0", fontFamily: "inherit", resize: "vertical", marginBottom: "0.5rem" }} />
-        
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#999" }}>{text.length} / 2000 characters</span>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={loadExample} style={{ padding: "0.25rem 0.75rem", fontSize: "0.7rem", background: "#8b5cf6", color: "white", border: "none", borderRadius: 40, cursor: "pointer" }}>📖 Example</button>
-            <button onClick={clearAll} style={{ padding: "0.25rem 0.75rem", fontSize: "0.7rem", background: "#ef4444", color: "white", border: "none", borderRadius: 40, cursor: "pointer" }}>Clear</button>
-          </div>
-        </div>
+      <div style={{ background: "rgba(255,255,255,0.95)", borderRadius: 24, padding: "1.5rem" }}>
+        <label style={{ fontWeight: 600, marginBottom: "0.5rem", display: "block" }}>📝 Enter Text</label>
+        <textarea 
+          value={text} 
+          onChange={(e) => setText(e.target.value)} 
+          placeholder="Type something here..." 
+          rows={4} 
+          style={{ width: "100%", padding: "1rem", fontSize: "1rem", borderRadius: 16, border: "1px solid #e0e0e0", fontFamily: "inherit", resize: "vertical", marginBottom: "1rem" }} 
+        />
 
-        {/* Search */}
-        <div style={{ marginBottom: "1rem" }}>
-          <input type="text" placeholder="🔍 Search voices..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: "100%", padding: "0.5rem", borderRadius: 40, border: "1px solid #e0e0e0" }} />
-        </div>
-
-        {/* Filters */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
-          <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} style={{ padding: "0.25rem 0.5rem", borderRadius: 40, border: "1px solid #e0e0e0", fontSize: "0.7rem" }}>
-            <option value="all">👥 All Genders</option>
-            <option value="male">👨 Men</option>
-            <option value="female">👩 Women</option>
-            <option value="boy">👦 Boys</option>
-            <option value="girl">👧 Girls</option>
-          </select>
-
-          <select value={emotionFilter} onChange={(e) => setEmotionFilter(e.target.value)} style={{ padding: "0.25rem 0.5rem", borderRadius: 40, border: "1px solid #e0e0e0", fontSize: "0.7rem" }}>
-            <option value="all">😐 All Emotions</option>
-            <option value="happy">😊 Happy</option>
-            <option value="sad">😢 Sad</option>
-            <option value="angry">😠 Angry</option>
-            <option value="fearful">😨 Fearful</option>
-            <option value="excited">🤩 Excited</option>
-            <option value="calm">😌 Calm</option>
-            <option value="whisper">🤫 Whisper</option>
-            <option value="crying">😭 Crying</option>
-            <option value="mixed">😶 Mixed</option>
-          </select>
-
-          <select value={languageFilter} onChange={(e) => setLanguageFilter(e.target.value)} style={{ padding: "0.25rem 0.5rem", borderRadius: 40, border: "1px solid #e0e0e0", fontSize: "0.7rem" }}>
-            <option value="all">🌐 All Languages</option>
-            <option value="English">🇬🇧 English</option>
-            <option value="Urdu">🇵🇰 Urdu</option>
-            <option value="Hindi">🇮🇳 Hindi</option>
-            <option value="Arabic">🇸🇦 Arabic</option>
-          </select>
-
-          <select value={voiceTypeFilter} onChange={(e) => setVoiceTypeFilter(e.target.value)} style={{ padding: "0.25rem 0.5rem", borderRadius: 40, border: "1px solid #e0e0e0", fontSize: "0.7rem" }}>
-            <option value="all">🎵 All Voice Types</option>
-            <option value="normal">Normal</option>
-            <option value="thick">🔊 Thick</option>
-            <option value="thin">🎵 Thin</option>
-            <option value="deep">🎻 Deep</option>
-            <option value="soft">🍃 Soft</option>
-            <option value="rough">🔥 Rough</option>
-            <option value="melodic">🎶 Melodic</option>
-          </select>
-
-          <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)} style={{ padding: "0.25rem 0.5rem", borderRadius: 40, border: "1px solid #e0e0e0", fontSize: "0.7rem" }}>
-            <option value="all">👤 All Ages</option>
-            <option value="child">🧒 Child</option>
-            <option value="young">🧑 Young</option>
-            <option value="adult">👨 Adult</option>
-            <option value="senior">👴 Senior</option>
-          </select>
-        </div>
-
-        {/* Voice List */}
-        <div style={{ marginBottom: "1rem", maxHeight: 300, overflowY: "auto", border: "1px solid #e0e0e0", borderRadius: 16, padding: "0.5rem" }}>
-          <div style={{ fontSize: "0.7rem", color: "#999", marginBottom: "0.5rem" }}>{filteredVoices.length} voices available</div>
-          {filteredVoices.map((voice) => (
-            <button key={voice.id} onClick={() => setSelectedVoice(voice)} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.25rem", borderRadius: 12, background: selectedVoice.id === voice.id ? "#667eea" : "#f5f5f5", color: selectedVoice.id === voice.id ? "white" : "#333", border: "none", cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 500 }}>{getGenderIcon(voice.gender)} {voice.name}</div>
-                <div style={{ fontSize: "0.6rem", opacity: 0.7 }}>{voice.nameUr}</div>
-                <div style={{ fontSize: "0.55rem" }}>{getEmotionIcon(voice.emotion)} {voice.emotion} • {voice.voiceType} • {voice.accent}</div>
-              </div>
-              {selectedVoice.id === voice.id && <span style={{ fontSize: "1rem" }}>✅</span>}
+        <label style={{ fontWeight: 600, marginBottom: "0.5rem", display: "block" }}>🎙️ Select Voice</label>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem" }}>
+          {voices.map((voice) => (
+            <button
+              key={voice.id}
+              onClick={() => setSelectedVoice(voice)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: 40,
+                background: selectedVoice.id === voice.id ? "#667eea" : "#f0f0f0",
+                color: selectedVoice.id === voice.id ? "white" : "#333",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {voice.name}
             </button>
           ))}
         </div>
 
-        <button onClick={generateVoice} disabled={loading || !text} style={{ width: "100%", padding: "0.875rem", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", border: "none", borderRadius: 40, fontSize: "1rem", fontWeight: 600, cursor: loading || !text ? "not-allowed" : "pointer", opacity: loading || !text ? 0.6 : 1 }}>
-          {loading ? "🎤 Generating voice..." : `🎙️ Generate with ${selectedVoice.name}`}
-        </button>
-      </div>
-
-      {audioUrl && (
-        <div style={{ background: "rgba(255,255,255,0.95)", borderRadius: 24, padding: "1.5rem", textAlign: "center" }}>
-          <audio controls src={audioUrl} style={{ width: "100%", marginBottom: "1rem" }} />
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <a href={audioUrl} download style={{ padding: "0.5rem 1rem", background: "#10b981", color: "white", textDecoration: "none", borderRadius: 40, fontSize: "0.8rem" }}>💾 Download Audio</a>
-            <button onClick={() => { navigator.clipboard.writeText(audioUrl); setSuccessMsg("📋 Audio URL copied!"); setTimeout(() => setSuccessMsg(""), 2000); }} style={{ padding: "0.5rem 1rem", background: "#3b82f6", color: "white", border: "none", borderRadius: 40, fontSize: "0.8rem", cursor: "pointer" }}>📋 Copy URL</button>
-          </div>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+          <button onClick={speak} disabled={isSpeaking || !text} style={{ flex: 1, padding: "0.75rem", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", border: "none", borderRadius: 40, fontSize: "1rem", fontWeight: 600, cursor: isSpeaking || !text ? "not-allowed" : "pointer", opacity: isSpeaking || !text ? 0.6 : 1 }}>
+            {isSpeaking ? "🔊 Speaking..." : "🔊 Speak"}
+          </button>
+          <button onClick={stop} disabled={!isSpeaking} style={{ flex: 1, padding: "0.75rem", background: "#ef4444", color: "white", border: "none", borderRadius: 40, fontSize: "1rem", fontWeight: 600, cursor: !isSpeaking ? "not-allowed" : "pointer", opacity: !isSpeaking ? 0.6 : 1 }}>
+            ⏹️ Stop
+          </button>
         </div>
-      )}
+
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button onClick={loadExample} style={{ flex: 1, padding: "0.5rem", background: "#8b5cf6", color: "white", border: "none", borderRadius: 40, cursor: "pointer" }}>📖 Example</button>
+          <button onClick={clearAll} style={{ flex: 1, padding: "0.5rem", background: "#ef4444", color: "white", border: "none", borderRadius: 40, cursor: "pointer" }}>🗑️ Clear</button>
+        </div>
+      </div>
 
       {error && <div style={{ marginTop: "1rem", padding: "0.75rem", background: "rgba(239,68,68,0.1)", borderRadius: 12, color: "#ef4444", textAlign: "center" }}>❌ {error}</div>}
       {successMsg && <div style={{ marginTop: "1rem", padding: "0.75rem", background: "rgba(34,197,94,0.1)", borderRadius: 12, color: "#22c55e", textAlign: "center" }}>✅ {successMsg}</div>}
