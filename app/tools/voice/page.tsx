@@ -123,13 +123,14 @@ const voices: VoiceType[] = [
 // ============================================================
 
 export default function VoiceStudioPage() {
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const router = useRouter();
   const [text, setText] = useState("");
   const [selectedVoice, setSelectedVoice] = useState(voices[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  
   
   // Filters
   const [genderFilter, setGenderFilter] = useState<string>("all");
@@ -161,66 +162,72 @@ export default function VoiceStudioPage() {
 
   // Generate voice using browser's Speech Synthesis API
   const generateVoice = () => {
-    if (!text.trim()) {
-      setError("Please enter some text");
-      return;
-    }
+  if (!text.trim()) {
+    setError("Please enter some text");
+    return;
+  }
 
-    // Stop any ongoing speech
-    stopSpeech();
+  // Stop any ongoing speech
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
 
-    // Check if browser supports speech synthesis
-    if (!('speechSynthesis' in window)) {
-      setError("Your browser does not support speech synthesis. Please use Chrome, Edge, or Safari.");
-      return;
-    }
+  // Check if browser supports speech synthesis
+  if (!('speechSynthesis' in window)) {
+    setError("Your browser does not support speech synthesis. Please use Chrome, Edge, or Safari.");
+    return;
+  }
 
-    setLoading(true);
-    setError("");
-    setSuccessMsg("");
+  setLoading(true);
+  setError("");
+  setSuccessMsg("");
+  setAudioUrl("");
 
-    try {
-      const utterance = new SpeechSynthesisUtterance(text);
-      
-      // Set language based on selected voice
-      let lang = "en-US";
-      if (selectedVoice.language === "Urdu") lang = "ur-PK";
-      else if (selectedVoice.language === "Hindi") lang = "hi-IN";
-      else if (selectedVoice.language === "Arabic") lang = "ar-SA";
-      else lang = "en-US";
-      
-      utterance.lang = lang;
-      utterance.rate = selectedVoice.speed;
-      utterance.pitch = selectedVoice.pitch;
-      utterance.volume = 1;
-      
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-        setLoading(false);
-        setSuccessMsg(`🎤 Speaking with ${selectedVoice.name} voice...`);
-        setTimeout(() => setSuccessMsg(""), 3000);
-      };
-      
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        setSuccessMsg(`✅ Voice generation complete!`);
-        setTimeout(() => setSuccessMsg(""), 2000);
-      };
-      
-      utterance.onerror = (event) => {
-        console.error("Speech synthesis error:", event);
-        setIsSpeaking(false);
-        setError("Speech generation failed. Please try again.");
-        setLoading(false);
-      };
-      
-      window.speechSynthesis.speak(utterance);
-      
-    } catch (err) {
-      setError("Failed to generate speech. Please try again.");
+  try {
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set language based on selected voice
+    let lang = "en-US";
+    if (selectedVoice.language === "Urdu") lang = "ur-PK";
+    else if (selectedVoice.language === "Hindi") lang = "hi-IN";
+    else if (selectedVoice.language === "Arabic") lang = "ar-SA";
+    
+    utterance.lang = lang;
+    utterance.rate = selectedVoice.speed;
+    utterance.pitch = selectedVoice.pitch;
+    utterance.volume = 1;
+    
+    utterance.onstart = () => {
       setLoading(false);
-    }
-  };
+      setSuccessMsg(`🎤 Speaking with ${selectedVoice.name} voice...`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+    };
+    
+    utterance.onend = () => {
+      setSuccessMsg(`✅ Voice complete!`);
+      setTimeout(() => setSuccessMsg(""), 2000);
+    };
+    
+    utterance.onerror = () => {
+      setError("Speech failed. Please try again.");
+      setLoading(false);
+    };
+    
+    window.speechSynthesis.speak(utterance);
+    
+  } catch (err) {
+    setError("Failed to generate speech.");
+    setLoading(false);
+  }
+};
+    
+    window.speechSynthesis.speak(utterance);
+    
+  } catch (err) {
+    setError("Failed to generate speech. Please try again.");
+    setLoading(false);
+  }
+};
 
   const loadExample = () => {
     setText("Welcome to AI Video Studio. Transform your ideas into reality with artificial intelligence. This is your creative companion for all your media needs.");
