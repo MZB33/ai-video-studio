@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 // Simple in-memory storage for tracking rate limits
 const rateLimitMap = new Map<string, number[]>();
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Target API endpoints exclusively to keep system light
   if (!request.nextUrl.pathname.startsWith('/api')) {
     return NextResponse.next();
