@@ -43,13 +43,37 @@ export default function PDFToolsPage() {
     setError("");
     setResult(null);
 
-    // Simulate PDF processing (in production, use actual PDF API)
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      formData.append("tool", activeTool);
+      files.forEach((file) => formData.append("files", file));
+
+      const response = await fetch("/api/pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "PDF processing failed");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setResult(data.result?.url || "https://example.com/result.pdf");
+        setSuccessMsg(data.result?.message || `${tools.find(t => t.id === activeTool)?.name} completed!`);
+        setTimeout(() => setSuccessMsg(""), 4000);
+      } else {
+        throw new Error("Invalid response from PDF API");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`Error: ${message}`);
+      console.error("PDF processing error:", err);
+    } finally {
       setLoading(false);
-      setSuccessMsg(`${tools.find(t => t.id === activeTool)?.name} completed! (Demo)`);
-      setResult("https://example.com/sample-output.pdf");
-      setTimeout(() => setSuccessMsg(""), 3000);
-    }, 2000);
+    }
   };
 
   const clearAll = () => {

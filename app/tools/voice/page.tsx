@@ -812,28 +812,79 @@ export default function VoiceStudioPage() {
         {innerTab==="output"&&(
           <div style={card}>
             {demoInfo&&(
-              <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:13,padding:"1rem",marginBottom:"0.875rem",direction:isRTL?"rtl":"ltr"}}>
-                <div style={{fontSize:"0.875rem",fontWeight:700,color:"#92400e",fontFamily:urFont,marginBottom:8}}>{t.demoTitle}</div>
-                <p style={{fontSize:"0.78rem",color:"#78350f",fontFamily:"Tajawal,sans-serif",lineHeight:1.6,marginBottom:8}}>{String(demoInfo.message??"")}</p>
+              <div style={{background:"#fffbeb",border:"2px solid #f59e0b",borderRadius:13,padding:"1.2rem",marginBottom:"0.875rem",direction:isRTL?"rtl":"ltr"}}>
+                <div style={{fontSize:"1rem",fontWeight:700,color:"#92400e",fontFamily:urFont,marginBottom:10}}>🔑 {String(demoInfo.error ?? demoInfo.message ?? "API Configuration Required")}</div>
+                
                 {(() => {
-  const envStatus = demoInfo.envStatus as Record<string, string> | undefined;
-  if (!envStatus) return null;
-  return (
-    <div style={{background:"#fef9c3",borderRadius:9,padding:"0.6rem",fontFamily:"monospace",fontSize:"0.65rem",direction:"ltr",marginBottom:8}}>
-      <strong>🔍 .env.local status:</strong><br/>
-      {Object.entries(envStatus).map(([k,v])=>(
-        <div key={k} style={{color:v==="missing"?"#dc2626":v.includes("invalid")?"#d97706":"#16a34a",marginTop:2}}>
-          {v==="missing"?"❌":v.includes("invalid")?"⚠️":"✅"} {k}: {v}
-        </div>
-      ))}
-    </div>
-  );
-})()}
-                <div style={{background:"#fef3c7",borderRadius:9,padding:"0.6rem",fontFamily:"monospace",fontSize:"0.68rem",direction:"ltr"}}>
+                  const link = (demoInfo?.diagnosticLink ?? "") as string;
+                  if (!link) return null;
+                  return (
+                    <div style={{background:"#dbeafe",borderRadius:9,padding:"0.75rem",marginBottom:"0.875rem",textAlign:"center"}}>
+                      <a href={link} target="_blank" rel="noreferrer" style={{color:"#0284c7",fontSize:"0.8rem",fontWeight:600,textDecoration:"none"}}>
+                        🔍 Check Configuration Status →
+                      </a>
+                    </div>
+                  );
+                })()}
+                
+                {(() => {
+                  const isVercel = (demoInfo?.isVercelDeployment ?? false) as boolean;
+                  const instructions = demoInfo?.instructions as Record<string, unknown> | undefined;
+                  if (!isVercel || !instructions) return null;
+                  const steps = (instructions.steps ?? []) as unknown[];
+                  return (
+                    <div style={{background:"#f3e8ff",border:"1px solid #d8b4fe",borderRadius:9,padding:"0.8rem",marginBottom:"0.875rem",fontSize:"0.75rem"}}>
+                      <div style={{fontWeight:700,color:"#581c87",marginBottom:8}}>📋 Vercel Setup Instructions:</div>
+                      {steps.map((step: unknown, idx: number) => (
+                        <div key={idx} style={{marginBottom:4,color:"#5b21b6",fontFamily:"monospace"}}>
+                          {String(step)}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+                
+                {(() => {
+                  const isVercel = (demoInfo?.isVercelDeployment ?? false) as boolean;
+                  const instructions = demoInfo?.instructions as Record<string, unknown> | undefined;
+                  if (isVercel || !instructions) return null;
+                  const steps = (instructions.steps ?? []) as unknown[];
+                  return (
+                    <div style={{background:"#fef3c7",borderRadius:9,padding:"0.8rem",marginBottom:"0.875rem",fontSize:"0.75rem"}}>
+                      <div style={{fontWeight:700,color:"#92400e",marginBottom:8}}>📋 Local Setup Instructions:</div>
+                      {steps.map((step: unknown, idx: number) => (
+                        <div key={idx} style={{marginBottom:4,color:"#78350f",fontFamily:"monospace"}}>
+                          {String(step)}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+                
+                {(() => {
+                  const envStatus = demoInfo.envStatus as Record<string, string> | undefined;
+                  if (!envStatus) return null;
+                  return (
+                    <div style={{background:"#fef9c3",borderRadius:9,padding:"0.6rem",fontFamily:"monospace",fontSize:"0.65rem",direction:"ltr",marginBottom:8}}>
+                      <strong>🔍 Current API Key Status:</strong><br/>
+                      {Object.entries(envStatus).map(([k,v])=>(
+                        <div key={k} style={{color:v==="missing"?"#dc2626":v.includes("invalid")?"#d97706":"#16a34a",marginTop:2}}>
+                          {v==="missing"?"❌":v.includes("invalid")?"⚠️":"✅"} {k}: {v}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+                
+                <div style={{background:"#f0fdf4",borderRadius:9,padding:"0.75rem",fontFamily:"monospace",fontSize:"0.68rem",direction:"ltr"}}>
+                  <div style={{fontWeight:700,color:"#15803d",marginBottom:6}}>Recommended TTS Providers (Priority Order):</div>
                   {Object.entries((demoInfo.setupGuide as Record<string,{key:string;url:string;note:string}>)??{}).map(([k,v])=>(
-                    <div key={k} style={{marginBottom:4}}>
-                      <span style={{color:"#065f46",fontWeight:700}}>{v.key}=your_key</span><br/>
-                      <a href={v.url} target="_blank" rel="noreferrer" style={{color:"#0284c7",fontSize:"0.62rem"}}>📖 {v.url}</a>
+                    <div key={k} style={{marginBottom:6,paddingBottom:6,borderBottom:"1px solid #d1fae5"}}>
+                      <div style={{color:"#065f46",fontWeight:700,marginBottom:2}}>{v.key}</div>
+                      <div style={{color:"#047857",fontSize:"0.62rem",marginBottom:2}}>{v.note}</div>
+                      <a href={v.url} target="_blank" rel="noreferrer" style={{color:"#0284c7",fontSize:"0.62rem",textDecoration:"none"}}>
+                        Get token: {v.url} →
+                      </a>
                     </div>
                   ))}
                 </div>
@@ -896,6 +947,16 @@ export default function VoiceStudioPage() {
         {error&&(
           <div style={{background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:13,padding:"0.75rem 1rem",marginBottom:"0.75rem",direction:isRTL?"rtl":"ltr"}}>
             <p style={{color:"#dc2626",fontSize:"0.82rem",fontFamily:urFont}}>❌ {error}</p>
+            {errorDetails && errorDetails.length > 0 && (
+              <div style={{marginTop:"0.5rem",fontSize:"0.75rem",fontFamily:"monospace",color:"#991b1b",background:"rgba(0,0,0,0.05)",padding:"0.5rem",borderRadius:8}}>
+                <strong style={{display:"block",marginBottom:4}}>Provider Details:</strong>
+                {errorDetails.map((detail, idx) => (
+                  <div key={idx} style={{marginBottom:3,paddingBottom:3,borderBottom:idx < errorDetails.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none"}}>
+                    {detail}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </>)}

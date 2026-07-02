@@ -43,15 +43,37 @@ export default function FaceSwapperPage() {
     setError("");
     setResultImage(null);
 
-    // Simulate face swapping (in production, use actual AI API)
-    setTimeout(() => {
-      // For demo, we'll just show a preview effect
-      // In production, replace with Replicate API call
-      setResultImage(targetImage);
-      setSuccessMsg("✨ Face swap completed! (Demo version)");
-      setTimeout(() => setSuccessMsg(""), 3000);
+    try {
+      const response = await fetch("/api/face-swap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceImage,
+          targetImage,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Face swap failed");
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.result) {
+        setResultImage(data.result);
+        setSuccessMsg(`✨ Face swap completed! ${data.mode === 'mock' ? '(Demo)' : '(AI-Powered)'}`);
+        setTimeout(() => setSuccessMsg(""), 4000);
+      } else {
+        throw new Error("Invalid response from face swap API");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`Error: ${message}`);
+      console.error("Face swap error:", err);
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   const downloadResult = () => {
