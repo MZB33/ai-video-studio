@@ -1,187 +1,211 @@
-import { NextResponse } from "next/server";
+// app/api/image/route.ts
+// ================================================================
+//  Real AI image generation — replaces Unsplash stock-photo mock
+//  Priority: Replicate (FLUX) → HuggingFace (Stable Diffusion XL)
+// ================================================================
+import { NextRequest, NextResponse } from "next/server";
 
-// ========================
-// COMPLETE IMAGE DATABASE FOR ALL TYPES
-// ========================
-
-const imageDatabase = {
-  // 1. Cinematic Style
-  cinematic: [
-    "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1024&h=768",
-    "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=1024&h=768",
-    "https://images.unsplash.com/photo-1532798369041-bbe116b1aaf8?w=1024&h=768",
-  ],
-  
-  // 2. Portrait Style
-  portrait: [
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1024&h=768",
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1024&h=768",
-    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=1024&h=768",
-    "https://images.unsplash.com/photo-1491349174775-aaafddd81942?w=1024&h=768",
-  ],
-  
-  // 3. Landscape / Nature
-  landscape: [
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1024&h=768",
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1024&h=768",
-    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1024&h=768",
-    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1024&h=768",
-  ],
-  
-  // 4. Urban / City
-  urban: [
-    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1024&h=768",
-    "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1024&h=768",
-    "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1024&h=768",
-    "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1024&h=768",
-  ],
-  
-  // 5. Fantasy
-  fantasy: [
-    "https://images.unsplash.com/photo-1500964757637-c85e8a162366?w=1024&h=768",
-    "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=1024&h=768",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1024&h=768",
-  ],
-  
-  // 6. Sci-Fi
-  scifi: [
-    "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?w=1024&h=768",
-    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1024&h=768",
-    "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1024&h=768",
-  ],
-  
-  // 7. Abstract
-  abstract: [
-    "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1024&h=768",
-    "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=1024&h=768",
-    "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=1024&h=768",
-  ],
-  
-  // 8. Anime/Animation (using stylized photos)
-  anime: [
-    "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1024&h=768",
-    "https://images.unsplash.com/photo-1585937421616-70a00f50645b?w=1024&h=768",
-    "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=1024&h=768",
-  ],
-  
-  // 9. Realistic
-  realistic: [
-    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1024&h=768",
-    "https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=1024&h=768",
-    "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1024&h=768",
-  ],
-  
-  // 10. Historical
-  historical: [
-    "https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=1024&h=768",
-    "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=1024&h=768",
-    "https://images.unsplash.com/photo-1503174971373-b1f69850bded?w=1024&h=768",
-  ],
-  
-  // 11. Horror/Dark
-  horror: [
-    "https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=1024&h=768",
-    "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1024&h=768",
-    "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1024&h=768",
-  ],
-  
-  // 12. Romantic
-  romantic: [
-    "https://images.unsplash.com/photo-1516589091380-5d8e87c6999b?w=1024&h=768",
-    "https://images.unsplash.com/photo-1518621736915-f3b1c41fd216?w=1024&h=768",
-    "https://images.unsplash.com/photo-1508974239320-0a029497e820?w=1024&h=768",
-  ],
-  
-  // 13. Action
-  action: [
-    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1024&h=768",
-    "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=1024&h=768",
-    "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=1024&h=768",
-  ],
-  
-  // 14. Minimalist
-  minimalist: [
-    "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1024&h=768",
-    "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=1024&h=768",
-    "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=1024&h=768",
-  ],
-  
-  // Special Characters
-  woodcutter: [
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1024&h=768",
-    "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=1024&h=768",
-  ],
-  goddess: [
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1024&h=768",
-    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=1024&h=768",
-  ],
-  river: [
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1024&h=768",
-    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1024&h=768",
-  ],
+// ── Style presets — modify the prompt to steer output ─────────
+const STYLE_PROMPTS: Record<string, string> = {
+  "realistic-portrait": "photorealistic, professional photography, sharp focus, natural lighting, 8k, high detail",
+  "3d-art":             "3D render, octane render, cinema4d, highly detailed, studio lighting",
+  "handmade-art":       "watercolor painting, traditional art, hand-painted texture, artistic brush strokes",
+  "cartoon-art":        "cartoon style, anime, vibrant colors, clean lines, Studio Ghibli inspired",
+  "historical":         "historical photograph style, period-accurate, documentary photography",
+  "cinematic":          "cinematic lighting, movie still, dramatic composition, film grain, 35mm",
+  "logo":               "minimalist logo design, vector art, clean, professional branding",
+  "poster":             "poster design, bold typography space, graphic design, high contrast",
 };
 
-// Detect image type from prompt
-function detectImageType(prompt: string): string {
-  const lower = prompt.toLowerCase();
-  
-  if (lower.includes("cinematic") || lower.includes("movie") || lower.includes("film")) return "cinematic";
-  if (lower.includes("portrait") || lower.includes("face") || lower.includes("person")) return "portrait";
-  if (lower.includes("landscape") || lower.includes("nature") || lower.includes("mountain") || lower.includes("forest")) return "landscape";
-  if (lower.includes("city") || lower.includes("urban") || lower.includes("street") || lower.includes("building")) return "urban";
-  if (lower.includes("fantasy") || lower.includes("magic") || lower.includes("dragon") || lower.includes("castle")) return "fantasy";
-  if (lower.includes("sci-fi") || lower.includes("futuristic") || lower.includes("space") || lower.includes("robot")) return "scifi";
-  if (lower.includes("abstract") || lower.includes("art") || lower.includes("colorful")) return "abstract";
-  if (lower.includes("anime") || lower.includes("animation") || lower.includes("cartoon")) return "anime";
-  if (lower.includes("realistic") || lower.includes("real") || lower.includes("photo")) return "realistic";
-  if (lower.includes("historical") || lower.includes("ancient") || lower.includes("medieval") || lower.includes("old")) return "historical";
-  if (lower.includes("horror") || lower.includes("dark") || lower.includes("spooky") || lower.includes("scary")) return "horror";
-  if (lower.includes("romantic") || lower.includes("love") || lower.includes("couple")) return "romantic";
-  if (lower.includes("action") || lower.includes("battle") || lower.includes("fight")) return "action";
-  if (lower.includes("minimalist") || lower.includes("simple") || lower.includes("clean")) return "minimalist";
-  
-  // Special characters
-  if (lower.includes("woodcutter")) return "woodcutter";
-  if (lower.includes("goddess")) return "goddess";
-  if (lower.includes("river")) return "river";
-  
-  return "cinematic"; // default
+function clamp(v: number, min: number, max: number) { return Math.min(max, Math.max(min, v)); }
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 45000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try { return await fetch(url, { ...options, signal: controller.signal }); }
+  finally { clearTimeout(timer); }
 }
 
-export async function POST(req: Request) {
-  try {
-    const { prompt, style, quality, provider = "mock" } = await req.json();
+function getKeys() {
+  const replicate   = (process.env.REPLICATE_API_TOKEN  ?? "").trim();
+  const huggingface = (process.env.HUGGINGFACE_API_KEY  ?? "").trim();
+  const invalid = (s: string) => !s || s.includes("your_") || s.includes("xxxxxxx");
+  return {
+    replicate:   !invalid(replicate)   && replicate.startsWith("r8_")   ? replicate   : null,
+    huggingface: !invalid(huggingface) && huggingface.startsWith("hf_") ? huggingface : null,
+  };
+}
 
-    if (!prompt) {
-      return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
+// ================================================================
+//  PROVIDER: Replicate — FLUX Schnell (fast, high quality)
+// ================================================================
+async function tryReplicate(prompt: string, aspectRatio: string, token: string): Promise<string> {
+  // "Prefer: wait" makes Replicate hold the connection until done (or ~60s timeout),
+  // avoiding the need to poll for most requests.
+  const res = await fetchWithTimeout(
+    "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Prefer: "wait",
+      },
+      body: JSON.stringify({
+        input: {
+          prompt,
+          aspect_ratio: aspectRatio,
+          output_format: "jpg",
+          num_outputs: 1,
+        },
+      }),
+    },
+    50000
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(`Replicate ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
+
+  // If already succeeded (common with Prefer: wait for fast models)
+  if (data.status === "succeeded" && data.output) {
+    const url = Array.isArray(data.output) ? data.output[0] : data.output;
+    if (url) return url;
+  }
+
+  // Otherwise poll the prediction until it finishes (max ~30s extra)
+  if (data.urls?.get) {
+    for (let i = 0; i < 15; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const poll = await fetchWithTimeout(data.urls.get, { headers: { Authorization: `Bearer ${token}` } }, 10000);
+      const pollData = await poll.json();
+      if (pollData.status === "succeeded" && pollData.output) {
+        const url = Array.isArray(pollData.output) ? pollData.output[0] : pollData.output;
+        if (url) return url;
+      }
+      if (pollData.status === "failed" || pollData.status === "canceled") {
+        throw new Error(`Replicate generation ${pollData.status}: ${pollData.error ?? "unknown"}`);
+      }
+    }
+  }
+
+  throw new Error("Replicate: generation timed out without a result");
+}
+
+// ================================================================
+//  PROVIDER: HuggingFace — Stable Diffusion XL (free fallback)
+// ================================================================
+async function tryHuggingFace(prompt: string, key: string): Promise<Buffer> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetchWithTimeout(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ inputs: prompt }),
+        },
+        35000
+      );
+      if (!res.ok) {
+        const errText = await res.text();
+        if (res.status === 503 && attempt === 0) { await new Promise(r => setTimeout(r, 4000)); continue; }
+        throw new Error(`HuggingFace ${res.status}: ${errText.slice(0, 200)}`);
+      }
+      return Buffer.from(await res.arrayBuffer());
+    } catch (e) {
+      lastErr = e;
+      if (e instanceof Error && e.name === "AbortError") lastErr = new Error("HuggingFace request timed out (35s)");
+      if (attempt === 0) { await new Promise(r => setTimeout(r, 1500)); continue; }
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("HuggingFace: unknown error");
+}
+
+// ================================================================
+//  MAIN HANDLER
+// ================================================================
+export async function POST(req: NextRequest) {
+  try {
+    const body   = await req.json();
+    const prompt = String(body.prompt ?? "").trim();
+    const style  = String(body.style  ?? body.type ?? "realistic-portrait");
+    const width  = clamp(parseInt(body.width)  || 1024, 256, 1536);
+    const height = clamp(parseInt(body.height) || 1024, 256, 1536);
+
+    if (!prompt) return NextResponse.json({ error: "Prompt is empty" }, { status: 400 });
+    if (prompt.length > 1000) return NextResponse.json({ error: "Prompt too long (max 1000 chars)" }, { status: 400 });
+
+    // Build the real prompt: user's text + style modifiers
+    const styleModifier = STYLE_PROMPTS[style] ?? "";
+    const fullPrompt = styleModifier ? `${prompt}, ${styleModifier}` : prompt;
+
+    // Convert width/height to Replicate's aspect_ratio format
+    const ratio = width / height;
+    const aspectRatio =
+      Math.abs(ratio - 1)     < 0.05 ? "1:1"  :
+      Math.abs(ratio - 4/3)   < 0.1  ? "4:3"  :
+      Math.abs(ratio - 3/4)   < 0.1  ? "3:4"  :
+      Math.abs(ratio - 16/9)  < 0.1  ? "16:9" :
+      Math.abs(ratio - 9/16)  < 0.1  ? "9:16" : "1:1";
+
+    const keys = getKeys();
+    const errors: string[] = [];
+
+    console.log(`🎨 Generating image — prompt: "${fullPrompt.slice(0,80)}..." style: ${style}`);
+
+    // ── PRIORITY 1: Replicate (FLUX) — best quality, fast ──────
+    if (keys.replicate) {
+      try {
+        const imageUrl = await tryReplicate(fullPrompt, aspectRatio, keys.replicate);
+        console.log(`✅ Image generated via Replicate`);
+        return NextResponse.json({ image: imageUrl, provider: "replicate", prompt: fullPrompt });
+      } catch (e) {
+        errors.push(`replicate: ${e instanceof Error ? e.message : String(e)}`);
+        console.error("Replicate failed:", e);
+      }
     }
 
-    // Clean the prompt
-    let cleanPrompt = prompt;
-    cleanPrompt = cleanPrompt.replace(/Prompt \d+:/gi, "");
-    cleanPrompt = cleanPrompt.split("—")[0];
-    cleanPrompt = cleanPrompt.trim();
+    // ── PRIORITY 2: HuggingFace SDXL — free fallback ───────────
+    if (keys.huggingface) {
+      try {
+        const buffer = await tryHuggingFace(fullPrompt, keys.huggingface);
+        const dataUrl = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+        console.log(`✅ Image generated via HuggingFace`);
+        return NextResponse.json({ image: dataUrl, provider: "huggingface", prompt: fullPrompt });
+      } catch (e) {
+        errors.push(`huggingface: ${e instanceof Error ? e.message : String(e)}`);
+        console.error("HuggingFace failed:", e);
+      }
+    }
 
-    // Detect image type
-    const imageType = detectImageType(cleanPrompt);
-    const images = imageDatabase[imageType as keyof typeof imageDatabase] || imageDatabase.cinematic;
-    const randomIndex = Math.floor(Math.random() * images.length);
-    const imageUrl = `${images[randomIndex]}?t=${Date.now()}&type=${imageType}`;
+    // ── NO PROVIDER WORKED ──────────────────────────────────────
+    const hasKeys = keys.replicate || keys.huggingface;
+    if (hasKeys) {
+      return NextResponse.json({ error: "All image providers failed", details: errors }, { status: 500 });
+    }
 
-    console.log(`🎨 Image type: ${imageType}, URL: ${imageUrl.substring(0, 80)}`);
-
-    return NextResponse.json({ 
-      image: imageUrl,
-      type: imageType,
-      provider: "mock"
+    return NextResponse.json({
+      image: null, demo: true,
+      message: "No valid image API key found. Add REPLICATE_API_TOKEN or HUGGINGFACE_API_KEY to .env.local",
+      setupGuide: {
+        replicate:   { key: "REPLICATE_API_TOKEN",  url: "https://replicate.com/account/api-tokens",  note: "Pay per use (~$0.003/image) — best quality via FLUX" },
+        huggingface: { key: "HUGGINGFACE_API_KEY",  url: "https://huggingface.co/settings/tokens",     note: "Free — Stable Diffusion XL, slower & lower quality" },
+      },
     });
 
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("API Error:", message);
-    return NextResponse.json({ 
-      image: `https://picsum.photos/seed/${Date.now()}/1024/768`,
-      type: "fallback"
-    });
+  } catch (err) {
+    console.error("Image API unhandled:", err);
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Internal error" }, { status: 500 });
   }
+}
+
+export async function GET() {
+  const keys = getKeys();
+  return NextResponse.json({
+    status: "ok",
+    available: { replicate: !!keys.replicate, huggingface: !!keys.huggingface },
+    note: "This endpoint now generates real AI images from your prompt — no more Unsplash stock photos.",
+  });
 }
