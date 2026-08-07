@@ -55,7 +55,40 @@ MODEL_API_URL=
 MODEL_API_KEY=
 REPLICATE_API_TOKEN=
 REPLICATE_MODEL_VERSION=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+MONITORING_API_KEY=
+MONITORING_ADMIN_PASSWORD=
+MONITORING_ALERT_WEBHOOK_URL=
+PRO_MONTHLY_CHECKOUT_URL=
+PRO_ANNUAL_CHECKOUT_URL=
+STUDIO_MONTHLY_CHECKOUT_URL=
+STUDIO_ANNUAL_CHECKOUT_URL=
+BUSINESS_MONTHLY_CHECKOUT_URL=
+BUSINESS_ANNUAL_CHECKOUT_URL=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_PRO_MONTHLY=
+STRIPE_PRICE_PRO_ANNUAL=
+STRIPE_PRICE_STUDIO_MONTHLY=
+STRIPE_PRICE_STUDIO_ANNUAL=
+STRIPE_PRICE_BUSINESS_MONTHLY=
+STRIPE_PRICE_BUSINESS_ANNUAL=
+APP_BASE_URL=
+BYPASS_BILLING_GUARDS=false
 ```
+
+`/api/billing/checkout` supports cycle-aware redirects with `plan` and `cycle` query params.
+Example: `/api/billing/checkout?plan=pro&cycle=annual`.
+
+For Stripe-native checkout, configure the `STRIPE_*` variables above and point Stripe webhook events to `/api/billing/webhook`.
+When Stripe is configured, checkout sessions are created server-side and webhook events update each account plan and payment ledger.
+
+`/api/monitoring` records public visits and frontend errors. In production it keeps durable visitor/error records when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are configured. `GET /api/monitoring` returns a summary when the `x-monitoring-key` header matches `MONITORING_API_KEY`. Without Upstash configured, monitoring falls back to in-memory storage for the current process.
+
+The secure admin dashboard lives at `/admin/monitoring` and requires `MONITORING_ADMIN_PASSWORD` through the `/admin/login` form.
+
+If `MONITORING_ALERT_WEBHOOK_URL` is set, every captured frontend error posts an automatic alert payload that includes the latest monitoring summary.
 
 ### 3. Run with PM2
 

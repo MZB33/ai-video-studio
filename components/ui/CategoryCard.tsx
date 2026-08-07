@@ -9,6 +9,8 @@ interface CategoryCardProps {
   description: string;
   color: string;
   isFree: boolean;
+  planLabel?: string;
+  planDetail?: string;
   thumbnail?: string;
   onClick?: () => void;
 }
@@ -25,7 +27,7 @@ const cardStyle: CSSProperties = {
   gap: "0.75rem",
 };
 
-export default function CategoryCard({ name, nameUr, icon, description, color, isFree, thumbnail, onClick }: CategoryCardProps) {
+export default function CategoryCard({ name, nameUr, icon, description, color, isFree, planLabel, planDetail, thumbnail, onClick }: CategoryCardProps) {
   return (
     <button
       type="button"
@@ -64,7 +66,10 @@ export default function CategoryCard({ name, nameUr, icon, description, color, i
       </div>
       <p style={{ margin: 0, color: "#4b5563", fontSize: "0.85rem", lineHeight: 1.6 }}>{description}</p>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: color, fontWeight: 700 }}>{isFree ? "Free" : "Pro"}</span>
+        <div style={{ textAlign: "left" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: color, fontWeight: 700 }}>{planLabel || (isFree ? "Free" : "Pro")}</span>
+          {planDetail ? <div style={{ fontSize: "0.72rem", color: "#9ca3af", marginTop: 4 }}>{planDetail}</div> : null}
+        </div>
         <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Open</span>
       </div>
     </button>

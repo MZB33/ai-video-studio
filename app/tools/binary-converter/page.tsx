@@ -40,7 +40,11 @@ export default function BinaryConverterPage() {
         <div style={{ display: "grid", gap: "1rem", marginBottom: "1rem" }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 600 }}>
             Mode
-            <select value={mode} onChange={(e) => setMode(e.target.value as any)} style={{ width: "100%", padding: "0.95rem 1rem", borderRadius: 16, border: "1px solid #d1d5db", fontSize: "1rem" }}>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as "binToDec" | "decToBin")}
+              style={{ width: "100%", padding: "0.95rem 1rem", borderRadius: 16, border: "1px solid #d1d5db", fontSize: "1rem" }}
+            >
               <option value="binToDec">Binary → Decimal</option>
               <option value="decToBin">Decimal → Binary</option>
             </select>

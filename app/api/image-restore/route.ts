@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { processImage } from "./processor";
+import { requireMinimumPlan } from "@/lib/billing-guard";
 
 async function dataUrlToBuffer(dataUrl: string) {
   const matches = dataUrl.match(/^data:(.+);base64,(.*)$/);
@@ -20,6 +21,9 @@ async function bufferToDataUrl(buf: Buffer, mime = "image/jpeg") {
 }
 
 export async function POST(request: Request) {
+  const planGuard = await requireMinimumPlan(request, "pro");
+  if (planGuard) return planGuard;
+
   try {
     const body = await request.json();
     const { image, mode } = body || {};

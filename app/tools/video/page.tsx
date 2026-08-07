@@ -9,7 +9,7 @@ interface ToolCard {
   isFree: boolean;
 }
 
-export const categories: ToolCard[] = [
+const categories: ToolCard[] = [
   {
     id: "cinematic",
     name: "Cinematic Studio",

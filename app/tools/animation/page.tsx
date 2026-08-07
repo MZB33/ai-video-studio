@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
-import ComingSoonBlock from "@/components/shared/ComingSoonBlock";
 
 const STYLES = [
   { id: "cartoon",    emoji: "🎨", name: "کارٹون",       color: "#f97316" },
@@ -15,14 +14,14 @@ const STYLES = [
 ];
 
 const SUB_TOOLS = [
-  { id: "film-to-cartoon",  emoji: "🎬", name: "فلم سے کارٹون",       desc: "اصل فلم → مکمل کارٹون",       soon: true  },
+  { id: "film-to-cartoon",  emoji: "🎬", name: "فلم سے کارٹون",       desc: "اصل فلم → مکمل کارٹون",       soon: false },
   { id: "photo-to-cartoon", emoji: "📷", name: "تصویر سے کارٹون",     desc: "اپنی تصویر کارٹون بنائیں",    soon: false },
   { id: "character-create", emoji: "👾", name: "کارٹون کردار بنائیں", desc: "اپنا منفرد کردار ڈیزائن کریں", soon: false },
-  { id: "anime-style",      emoji: "⚡", name: "اینیمے اسٹائل",        desc: "جاپانی انداز میں تبدیلی",     soon: true  },
-  { id: "whiteboard",       emoji: "📋", name: "وائٹ بورڈ اینیمیشن",  desc: "تعلیمی ویڈیو بنائیں",          soon: true  },
-  { id: "motion-graphics",  emoji: "✨", name: "موشن گرافکس",          desc: "متحرک ٹیکسٹ و لوگو",          soon: true  },
-  { id: "2d-animation",     emoji: "🖼️", name: "2D اینیمیشن",         desc: "فلیٹ کارٹون اسٹائل",          soon: true  },
-  { id: "3d-animation",     emoji: "🌐", name: "3D اینیمیشن",          desc: "تھری ڈی کردار و منظر",        soon: true  },
+  { id: "anime-style",      emoji: "⚡", name: "اینیمے اسٹائل",        desc: "جاپانی انداز میں تبدیلی",     soon: false },
+  { id: "whiteboard",       emoji: "📋", name: "وائٹ بورڈ اینیمیشن",  desc: "تعلیمی ویڈیو بنائیں",          soon: false },
+  { id: "motion-graphics",  emoji: "✨", name: "موشن گرافکس",          desc: "متحرک ٹیکسٹ و لوگو",          soon: false },
+  { id: "2d-animation",     emoji: "🖼️", name: "2D اینیمیشن",         desc: "فلیٹ کارٹون اسٹائل",          soon: false },
+  { id: "3d-animation",     emoji: "🌐", name: "3D اینیمیشن",          desc: "تھری ڈی کردار و منظر",        soon: false },
 ];
 
 export default function AnimationPage() {
@@ -181,22 +180,6 @@ export default function AnimationPage() {
 
       {/* منتخب ٹول */}
       {tool && (
-        tool.soon ? (
-          <ComingSoonBlock
-            emoji={tool.emoji}
-            title={tool.name}
-            subtitle="This animation feature is coming very soon."
-            urduTitle={tool.name}
-            urduSubtitle="یہ اینیمیشن فیچر جلد دستیاب ہوگا"
-            accentColor="#f59e0b"
-            features={[
-              "اعلیٰ معیار AI اینیمیشن",
-              "تیز رفتار پروسیسنگ",
-              "مختلف اسٹائل آپشنز",
-              "MP4 ڈاؤنلوڈ",
-            ]}
-          />
-        ) : (
           <div
             style={{
               background: "rgba(255,255,255,0.97)",
@@ -256,7 +239,6 @@ export default function AnimationPage() {
               🎨 کارٹون بنائیں
             </button>
           </div>
-        )
       )}
 
       <BottomNav active="tools" onNavigate={(href) => router.push(href)} />

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getQueue } from "../queue";
+import { requireMinimumPlan } from "@/lib/billing-guard";
 
 export async function POST(req: Request) {
+  const planGuard = await requireMinimumPlan(req, "pro");
+  if (planGuard) return planGuard;
+
   try {
     const body = await req.json();
     const { image, mode } = body || {};

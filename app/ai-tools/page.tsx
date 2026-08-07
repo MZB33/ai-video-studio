@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { allCategories, type Category } from "@/lib/categories";
+import { summarizeCategoryAccess } from "@/lib/pricing";
 import CategoryCard from "@/components/ui/CategoryCard";
 import BottomNav from "@/components/ui/BottomNav";
 
@@ -45,6 +46,10 @@ export default function AIToolsPage() {
         }}
       >
         {aiTools.map((tool) => (
+          (() => {
+            const access = summarizeCategoryAccess(tool);
+
+            return (
           <CategoryCard
             key={tool.id}
             name={tool.nameEn}
@@ -53,8 +58,12 @@ export default function AIToolsPage() {
             color={tool.color}
             description={tool.description}
             isFree={tool.tools.some((item) => item.status === "free")}
+            planLabel={access.label}
+            planDetail={access.detail}
             onClick={() => router.push(`/tools/${tool.id}`)}
           />
+            );
+          })()
         ))}
       </div>
 

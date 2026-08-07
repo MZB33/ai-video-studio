@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  pageExtensions: ["ts", "tsx"],
+
   // Image optimization
   images: {
     remotePatterns: [

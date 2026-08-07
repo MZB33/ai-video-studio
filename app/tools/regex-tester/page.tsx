@@ -9,17 +9,14 @@ export default function RegexTesterPage() {
   const [pattern, setPattern] = useState("\\d+");
   const [flags, setFlags] = useState("g");
   const [text, setText] = useState("There are 12 apples and 7 oranges.");
-  const [error, setError] = useState("");
 
   const result = useMemo(() => {
     try {
       const regex = new RegExp(pattern, flags);
       const matches = [...text.matchAll(regex)].map((match) => ({ match: match[0], groups: match.slice(1) }));
-      setError("");
-      return matches;
+      return { matches, error: "" };
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid regex");
-      return [];
+      return { matches: [], error: err instanceof Error ? err.message : "Invalid regex" };
     }
   }, [pattern, flags, text]);
 
@@ -47,12 +44,12 @@ export default function RegexTesterPage() {
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} style={{ width: "100%", padding: "1rem", borderRadius: 16, border: "1px solid #d1d5db", fontFamily: "monospace", resize: "vertical" }} />
         </label>
 
-        {error && <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 16, background: "#fee2e2", color: "#b91c1c" }}>{error}</div>}
+        {result.error && <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 16, background: "#fee2e2", color: "#b91c1c" }}>{result.error}</div>}
 
         <div style={{ marginTop: "1.5rem", padding: "1.25rem", borderRadius: 20, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: "0.9rem", color: "#4b5563", marginBottom: 8 }}>Matches</div>
-          {result.length ? result.map((item, index) => (
-            <div key={index} style={{ marginBottom: index < result.length - 1 ? "1rem" : 0, padding: "0.85rem", borderRadius: 16, background: "white", border: "1px solid #e5e7eb" }}>
+          {result.matches.length ? result.matches.map((item, index) => (
+            <div key={index} style={{ marginBottom: index < result.matches.length - 1 ? "1rem" : 0, padding: "0.85rem", borderRadius: 16, background: "white", border: "1px solid #e5e7eb" }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>Match #{index + 1}: <span style={{ fontFamily: "monospace" }}>{item.match}</span></div>
               {item.groups.length > 0 && <div style={{ color: "#4b5563", fontSize: "0.9rem" }}>Groups: {item.groups.map((group, idx) => <span key={idx} style={{ marginRight: 8 }}>{idx + 1}: <strong>{group}</strong></span>)}</div>}
             </div>

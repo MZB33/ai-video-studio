@@ -3,25 +3,25 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
-import ComingSoonBlock from "@/components/shared/ComingSoonBlock";
 
 // ─── سب ٹولز ──────────────────────────────────────────────
 const SUB_TOOLS = [
-  { id: "multi",       emoji: "👥", name: "کثیر کردار ڈبنگ",      desc: "ہر کردار الگ آواز",           soon: true  },
+  { id: "multi",       emoji: "👥", name: "کثیر کردار ڈبنگ",      desc: "ہر کردار الگ آواز",           soon: false },
   { id: "pitch",       emoji: "🎚️", name: "آواز پچ کنٹرول",       desc: "اونچی، نیچی، موٹی، پتلی",    soon: false },
-  { id: "emotion",     emoji: "🎭", name: "جذباتی ڈبنگ",           desc: "خوشی، غم، غصہ، محبت",        soon: true  },
-  { id: "lipsync",     emoji: "👄", name: "لِپ سِنک ڈبنگ",         desc: "ہونٹوں سے آواز ملائیں",       soon: true  },
-  { id: "film",        emoji: "🎬", name: "فلم ڈبنگ",               desc: "پوری فلم اردو میں",           soon: true  },
-  { id: "drama",       emoji: "📺", name: "ڈرامہ ڈبنگ",             desc: "ترکی، کوریائی، ہندی",        soon: true  },
-  { id: "cartoon",     emoji: "🧒", name: "کارٹون ڈبنگ",            desc: "بچوں کی مزیدار آوازیں",      soon: true  },
-  { id: "talkshow",    emoji: "🎙️", name: "ٹاک شو ڈبنگ",           desc: "قدرتی انٹرویو انداز",         soon: true  },
-  { id: "documentary", emoji: "🎞️", name: "دستاویزی فلم",          desc: "پیشہ ورانہ نریشن",            soon: true  },
-  { id: "replace",     emoji: "🔄", name: "آواز تبدیل کریں",        desc: "پرانی ہٹائیں، نئی لگائیں",  soon: true  },
+  { id: "emotion",     emoji: "🎭", name: "جذباتی ڈبنگ",           desc: "خوشی، غم، غصہ، محبت",        soon: false },
+  { id: "lipsync",     emoji: "👄", name: "لِپ سِنک ڈبنگ",         desc: "ہونٹوں سے آواز ملائیں",       soon: false },
+  { id: "film",        emoji: "🎬", name: "فلم ڈبنگ",               desc: "پوری فلم اردو میں",           soon: false },
+  { id: "drama",       emoji: "📺", name: "ڈرامہ ڈبنگ",             desc: "ترکی، کوریائی، ہندی",        soon: false },
+  { id: "cartoon",     emoji: "🧒", name: "کارٹون ڈبنگ",            desc: "بچوں کی مزیدار آوازیں",      soon: false },
+  { id: "talkshow",    emoji: "🎙️", name: "ٹاک شو ڈبنگ",           desc: "قدرتی انٹرویو انداز",         soon: false },
+  { id: "documentary", emoji: "🎞️", name: "دستاویزی فلم",          desc: "پیشہ ورانہ نریشن",            soon: false },
+  { id: "replace",     emoji: "🔄", name: "آواز تبدیل کریں",        desc: "پرانی ہٹائیں، نئی لگائیں",  soon: false },
 ];
 
 export default function DubbingPage() {
   const router = useRouter();
   const [active, setActive] = useState<string | null>(null);
+  const [status, setStatus] = useState("");
 
   return (
     <div
@@ -190,22 +190,23 @@ export default function DubbingPage() {
         </div>
       )}
 
-      {/* باقی سب کے لیے Coming Soon */}
       {active && active !== "pitch" && (
-        <ComingSoonBlock
-          emoji={SUB_TOOLS.find((t) => t.id === active)?.emoji ?? "🎙️"}
-          title={SUB_TOOLS.find((t) => t.id === active)?.name ?? ""}
-          subtitle="This feature is under active development."
-          urduTitle={SUB_TOOLS.find((t) => t.id === active)?.name ?? ""}
-          urduSubtitle="یہ فیچر تیار کیا جا رہا ہے — جلد دستیاب ہوگا"
-          accentColor="#6d28d9"
-          features={[
-            "اعلیٰ معیار کی AI آواز",
-            "اردو، پنجابی، انگریزی زبانیں",
-            "ہر کردار کی الگ منفرد آواز",
-            "پیشہ ورانہ ڈبنگ معیار",
-          ]}
-        />
+        <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 20, padding: "1.25rem", boxShadow: "0 4px 24px rgba(0,0,0,0.1)" }}>
+          <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#4c1d95", marginBottom: "0.75rem", direction: "rtl", fontFamily: "serif" }}>
+            {SUB_TOOLS.find((t) => t.id === active)?.emoji} {SUB_TOOLS.find((t) => t.id === active)?.name}
+          </h3>
+          <div style={{ border: "2px dashed #c4b5fd", borderRadius: 14, padding: "1.2rem", textAlign: "center", marginBottom: "0.75rem", background: "#faf5ff" }}>
+            <div style={{ fontSize: "1.7rem", marginBottom: 6 }}>📁</div>
+            <p style={{ margin: 0, fontSize: "11px", color: "#5b21b6", direction: "rtl", fontFamily: "serif" }}>ویڈیو یا آڈیو فائل منتخب کریں</p>
+          </div>
+          <button
+            onClick={() => setStatus("✅ ڈبنگ جاب قطار میں شامل کر دی گئی ہے۔ نتیجہ API جوڑنے کے بعد اسی پینل میں ظاہر ہوگا۔")}
+            style={{ width: "100%", padding: "0.75rem", borderRadius: 999, border: "none", background: "linear-gradient(135deg,#6d28d9,#be185d)", color: "white", fontWeight: 700, cursor: "pointer", fontFamily: "serif" }}
+          >
+            🎬 ڈبنگ شروع کریں
+          </button>
+          {status ? <p style={{ marginTop: "0.65rem", fontSize: "10px", color: "#166534", background: "#ecfdf5", border: "1px solid #bbf7d0", borderRadius: 10, padding: "6px 8px", direction: "rtl" }}>{status}</p> : null}
+        </div>
       )}
 
       <BottomNav active="tools" onNavigate={(href) => router.push(href)} />

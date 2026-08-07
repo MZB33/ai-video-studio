@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
 
@@ -25,8 +25,16 @@ const buildGraphFn = (input: string) => {
 export default function GraphingCalculatorPage() {
   const router = useRouter();
   const [expression, setExpression] = useState("sin(x) * 10");
-  const [error, setError] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const validationError = useMemo(() => {
+    try {
+      buildGraphFn(expression);
+      return "";
+    } catch (err) {
+      return err instanceof Error ? err.message : "Invalid function";
+    }
+  }, [expression]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,6 +58,10 @@ export default function GraphingCalculatorPage() {
     ctx.lineTo(width / 2, height);
     ctx.stroke();
 
+    if (validationError) {
+      return;
+    }
+
     try {
       const fn = buildGraphFn(expression);
       ctx.strokeStyle = "#38bdf8";
@@ -59,7 +71,6 @@ export default function GraphingCalculatorPage() {
       const xMin = -10;
       const xMax = 10;
       const yScale = 20;
-      const xScale = width / (xMax - xMin);
 
       for (let i = 0; i <= width; i++) {
         const x = xMin + (i / width) * (xMax - xMin);
@@ -72,11 +83,10 @@ export default function GraphingCalculatorPage() {
       }
 
       ctx.stroke();
-      setError("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid function");
+    } catch {
+      // Validation is handled in validationError.
     }
-  }, [expression]);
+  }, [expression, validationError]);
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f172a 0%, #111827 100%)", padding: "1rem 1rem 80px 1rem" }}>
@@ -99,7 +109,7 @@ export default function GraphingCalculatorPage() {
           <canvas ref={canvasRef} width={760} height={360} style={{ width: "100%", display: "block" }} />
         </div>
 
-        {error && <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 16, background: "#fee2e2", color: "#b91c1c" }}>{error}</div>}
+        {validationError && <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 16, background: "#fee2e2", color: "#b91c1c" }}>{validationError}</div>}
 
         <div style={{ marginTop: "1rem", color: "#6b7280", fontSize: "0.9rem" }}>
           <div style={{ marginBottom: "0.25rem" }}><strong>Supported operators:</strong> +, -, *, /, ^</div>

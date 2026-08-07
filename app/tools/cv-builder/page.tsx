@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
-import ComingSoonBlock from "@/components/shared/ComingSoonBlock";
+import ToolWorkbench from "@/components/shared/ToolWorkbench";
 
 export default function CvBuilderPage() {
   const router = useRouter();
@@ -12,13 +12,20 @@ export default function CvBuilderPage() {
       <div style={{ marginBottom: "1.5rem", paddingTop: "1rem" }}>
         <button onClick={() => router.back()} style={{ background: "rgba(255,255,255,0.2)", border: "none", padding: "8px 16px", borderRadius: 40, color: "white", cursor: "pointer", marginBottom: "1rem" }}>← Back</button>
         <h1 style={{ color: "white", margin: 0, fontSize: "1.8rem" }}>📄 CV Builder</h1>
-        <p style={{ color: "rgba(255,255,255,0.8)", marginTop: "0.25rem" }}>Coming Soon</p>
+        <p style={{ color: "rgba(255,255,255,0.8)", marginTop: "0.25rem" }}>Resume and career draft generator</p>
       </div>
 
-      <ComingSoonBlock
-        title="📄 CV Builder"
-        description="AI-powered CV builder is under development. Soon you'll be able to create professional resumes in minutes."
-        icon="📄"
+      <ToolWorkbench
+        primaryLabel="Target role"
+        secondaryLabel="Skills, experience, achievements"
+        primaryPlaceholder="Example: Frontend Engineer"
+        secondaryPlaceholder="React, Next.js, 3 years, improved conversion by 18%"
+        ctaLabel="Generate CV drafts"
+        templates={[
+          "CV Summary {index}: Results-focused candidate for {primary}. Core strengths: {secondary}.",
+          "Experience bullets {index}: Use measurable outcomes, action verbs, and role-specific language for {primary}. Context: {secondary}.",
+          "Cover-letter opener {index}: I am applying for {primary}. My background in {secondary} aligns with your goals.",
+        ]}
       />
 
       <BottomNav active="tools" onNavigate={(href) => router.push(href)} />

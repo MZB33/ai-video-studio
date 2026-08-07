@@ -19,7 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*", "./app/api/prompts/image-api-v11/*"]
     }
   },
   "include": [

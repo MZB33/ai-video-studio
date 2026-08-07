@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getQueue } from "../../queue";
+import { requireMinimumPlan } from "@/lib/billing-guard";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const planGuard = await requireMinimumPlan(req, "pro");
+  if (planGuard) return planGuard;
+
   const { id } = await params;
   try {
     const queue = getQueue();
@@ -16,6 +20,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const planGuard = await requireMinimumPlan(req, "pro");
+  if (planGuard) return planGuard;
+
   // For BullMQ, processing is done by a worker process. POST here will just return current state.
   const { id } = await params;
   try {

@@ -87,7 +87,11 @@ export default function MatrixCalculatorPage() {
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 600 }}>
             Operation
-            <select value={operation} onChange={(e) => setOperation(e.target.value as any)} style={{ width: "100%", padding: "0.95rem 1rem", borderRadius: 16, border: "1px solid #d1d5db", fontSize: "1rem" }}>
+            <select
+              value={operation}
+              onChange={(e) => setOperation(e.target.value as "add" | "subtract" | "multiply" | "transpose" | "determinant")}
+              style={{ width: "100%", padding: "0.95rem 1rem", borderRadius: 16, border: "1px solid #d1d5db", fontSize: "1rem" }}
+            >
               <option value="add">Add</option>
               <option value="subtract">Subtract</option>
               <option value="multiply">Multiply</option>

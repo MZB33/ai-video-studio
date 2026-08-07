@@ -98,6 +98,7 @@ const T = {
     emiCalculator: "EMI Calculator",
     gpaCalculator: "GPA Calculator",
     tipCalculator: "Tip Calculator",
+    nanoBananaProFree: "NANO BANANA PRO FREE",
     percentageCalculator: "Percentage Calculator",
     worldClock: "World Clock",
     scientificCalculator: "Scientific Calculator",
@@ -112,6 +113,7 @@ const T = {
     jwtDecoder: "JWT Decoder",
     urlEncoderDecoder: "URL Encoder/Decoder",
     base64EncoderDecoder: "Base64 Encoder/Decoder",
+    pricing: "Pricing",
   },
   ur: {
     title: "🎬 سنیماٹک اسٹوڈیو",
@@ -169,6 +171,7 @@ const T = {
     emiCalculator: "EMI Calculator",
     gpaCalculator: "GPA Calculator",
     tipCalculator: "Tip Calculator",
+    nanoBananaProFree: "NANO BANANA PRO FREE",
     percentageCalculator: "Percentage Calculator",
     worldClock: "World Clock",
     scientificCalculator: "Scientific Calculator",
@@ -183,6 +186,7 @@ const T = {
     jwtDecoder: "JWT Decoder",
     urlEncoderDecoder: "URL Encoder/Decoder",
     base64EncoderDecoder: "Base64 Encoder/Decoder",
+    pricing: "قیمتیں",
   },
   hi: {
     title: "🎬 सिनेमैटिक स्टूडियो",
@@ -240,6 +244,7 @@ const T = {
     emiCalculator: "EMI Calculator",
     gpaCalculator: "GPA Calculator",
     tipCalculator: "Tip Calculator",
+    nanoBananaProFree: "NANO BANANA PRO FREE",
     percentageCalculator: "Percentage Calculator",
     worldClock: "World Clock",
     scientificCalculator: "Scientific Calculator",
@@ -254,6 +259,7 @@ const T = {
     jwtDecoder: "JWT Decoder",
     urlEncoderDecoder: "URL Encoder/Decoder",
     base64EncoderDecoder: "Base64 Encoder/Decoder",
+    pricing: "मूल्य",
   },
   ar: {
     title: "🎬 استوديو سينمائي",
@@ -311,6 +317,7 @@ const T = {
     emiCalculator: "EMI Calculator",
     gpaCalculator: "GPA Calculator",
     tipCalculator: "Tip Calculator",
+    nanoBananaProFree: "NANO BANANA PRO FREE",
     percentageCalculator: "Percentage Calculator",
     worldClock: "World Clock",
     scientificCalculator: "Scientific Calculator",
@@ -325,6 +332,7 @@ const T = {
     jwtDecoder: "JWT Decoder",
     urlEncoderDecoder: "URL Encoder/Decoder",
     base64EncoderDecoder: "Base64 Encoder/Decoder",
+    pricing: "الأسعار",
   },
 };
 
@@ -373,6 +381,7 @@ const QUICK_TOOLS: QuickTool[] = [
   { id: "emi-calculator", icon: "🏦", key: "emiCalculator", color: "#0284c7", href: "/tools/emi-calculator" },
   { id: "gpa-calculator", icon: "🎓", key: "gpaCalculator", color: "#8b5cf6", href: "/tools/gpa-calculator" },
   { id: "tip-calculator", icon: "💸", key: "tipCalculator", color: "#22c55e", href: "/tools/tip-calculator" },
+  { id: "nano-banana-pro-free", icon: "🍌", key: "nanoBananaProFree", color: "#f59e0b", href: "/tools/nano-banana-pro-free" },
   { id: "percentage-calculator", icon: "%", key: "percentageCalculator", color: "#eab308", href: "/tools/percentage-calculator" },
   { id: "world-clock", icon: "🕒", key: "worldClock", color: "#0ea5e9", href: "/tools/world-clock" },
   { id: "scientific-calculator", icon: "🧮", key: "scientificCalculator", color: "#f97316", href: "/tools/scientific-calculator" },
@@ -865,6 +874,16 @@ export default function CinematicStudioPage() {
             {t.title}
           </h1>
           <p style={{ color: th.subtext, fontSize: "0.9rem" }}>{t.subtitle}</p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 14 }}>
+            <button onClick={() => router.push("/pricing")}
+              style={{ ...btn(th.accent), borderRadius: 999, fontSize: "0.75rem" }}>
+              💳 {t.pricing}
+            </button>
+            <button onClick={() => router.push("/ai-tools")}
+              style={{ ...btn(th.surface), color: th.text, border: `1px solid ${th.border}`, borderRadius: 999, fontSize: "0.75rem" }}>
+              ✨ AI Tools
+            </button>
+          </div>
         </div>
 
         {/* ── TABS ────────────────────────────────────── */}
@@ -1125,7 +1144,7 @@ export default function CinematicStudioPage() {
         button:disabled { opacity: .5 !important; cursor: not-allowed !important; }
       `}</style>
 
-      <BottomNav active="" onNavigate={(href) => router.push(href)} />
+      <BottomNav active="home" onNavigate={(href) => router.push(href)} />
     </div>
   );
 }

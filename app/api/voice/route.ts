@@ -1,9 +1,13 @@
 // app/api/voice/route.ts
 // Priority: VoiceRSS (supported langs only) → HuggingFace → ElevenLabs → OpenAI → Google
+import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
+import { requireMinimumPlan } from "@/lib/billing-guard";
+import { readBillingIdentity } from "@/lib/billing-auth";
+import { getUserApiKeys } from "@/lib/user-api-keys";
 
 // ── VoiceRSS ONLY supports these languages — Urdu & Persian are NOT supported ──
-// (confirmed from VoiceRSS official docs: https://www.voicerss.org/api/)
 const VR_LANG: Record<string, string> = {
   "English-American":"en-us","English-British":"en-gb","English-Australian":"en-au",
   "Hindi-Indian":"hi-in","Arabic-Saudi":"ar-sa","Arabic-Egyptian":"ar-eg",
@@ -12,8 +16,6 @@ const VR_LANG: Record<string, string> = {
   "Dutch-Dutch":"nl-nl","Spanish-Castilian":"es-es","Spanish-Latin Am.":"es-mx",
   "Turkish-Istanbul":"tr-tr","Portuguese-Brazilian":"pt-br","Italian-Roman":"it-it",
 };
-// Urdu-Pakistani, Urdu-Punjabi, Persian-Iranian are deliberately excluded —
-// requests for these languages will skip VoiceRSS entirely.
 
 const GOOGLE_LANG: Record<string, string> = {
   "English-American":"en-US","English-British":"en-GB","English-Australian":"en-AU",
@@ -38,7 +40,9 @@ const EL_VOICES: Record<string, string> = {
   "en-f-02":"AZnzlk1XvdvUeBnXmlld",
 };
 
-function clamp(v: number, min: number, max: number) { return Math.min(max, Math.max(min, v)); }
+function clamp(v: number, min: number, max: number) { 
+  return Math.min(max, Math.max(min, v)); 
+}
 
 function oaiVoice(gender: string, emotion: string): string {
   if (gender === "female" || gender === "girl") return emotion === "excited" ? "nova" : "shimmer";
@@ -55,7 +59,7 @@ function buildSSML(text: string, speed: number, pitch: number, emotion: string):
   return `<speak><prosody rate="${rate}" pitch="${pitchV}" volume="${vol}">${text}</prosody></speak>`;
 }
 
-// ── fetch with timeout — fixes generic "fetch failed" hangs ──
+// ── fetch with timeout ──
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 15000): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -66,19 +70,22 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 1
   }
 }
 
-// ── Key validation ────────────────────────────────────────────
+// ── Key validation ──
 interface Keys {
-  voicerss: string | null; huggingface: string | null;
-  elevenlabs: string | null; openai: string | null; google: string | null;
+  voicerss: string | null; 
+  huggingface: string | null;
+  elevenlabs: string | null; 
+  openai: string | null; 
+  google: string | null;
 }
 
-function getKeys(): Keys {
+function getKeys(overrides?: Partial<Keys>): Keys {
   const raw = {
-    voicerss:    (process.env.VOICERSS_API_KEY    ?? "").trim(),
-    huggingface: (process.env.HUGGINGFACE_API_KEY ?? "").trim(),
-    elevenlabs:  (process.env.ELEVENLABS_API_KEY  ?? "").trim(),
-    openai:      (process.env.OPENAI_API_KEY      ?? "").trim().replace(/^sk_/, "sk-"),
-    google:      (process.env.GOOGLE_TTS_KEY      ?? "").trim(),
+    voicerss:    (overrides?.voicerss ?? process.env.VOICERSS_API_KEY ?? "").trim(),
+    huggingface: (overrides?.huggingface ?? process.env.HUGGINGFACE_API_KEY ?? "").trim(),
+    elevenlabs:  (overrides?.elevenlabs ?? process.env.ELEVENLABS_API_KEY ?? "").trim(),
+    openai:      (overrides?.openai ?? process.env.OPENAI_API_KEY ?? "").trim().replace(/^sk_/, "sk-"),
+    google:      (overrides?.google ?? process.env.GOOGLE_TTS_KEY ?? "").trim(),
   };
   const invalid = (s: string) => !s || s.includes("your_") || s.includes("xxxxxxx") || s.includes("actual_") || s.includes("placeholder");
   return {
@@ -90,15 +97,19 @@ function getKeys(): Keys {
   };
 }
 
-// ── Providers ────────────────────────────────────────────────
+// ── Providers ──
 async function tryVoiceRSS(text: string, language: string, accent: string, speed: number, key: string): Promise<Buffer> {
   const langKey = `${language}-${accent}`;
   const hl = VR_LANG[langKey] ?? VR_LANG[`${language}-`];
-  if (!hl) throw new Error(`VoiceRSS does not support "${language}" — skipped (use Google or HuggingFace for this language)`);
+  if (!hl) throw new Error(`VoiceRSS does not support "${language}" — skipped`);
 
   const vrSpeed = clamp(Math.round((speed - 1) * 5), -10, 10);
   const params  = new URLSearchParams({ key, src: text.slice(0, 3000), hl, c: "MP3", f: "44khz_16bit_stereo", r: String(vrSpeed), b64: "true" });
-  const res = await fetchWithTimeout("https://api.voicerss.org/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() }, 10000);
+  const res = await fetchWithTimeout("https://api.voicerss.org/", { 
+    method: "POST", 
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }, 
+    body: params.toString() 
+  }, 10000);
   const txt = await res.text();
   if (txt.startsWith("ERROR")) throw new Error(`VoiceRSS: ${txt}`);
   return Buffer.from(txt.replace(/^data:audio\/[^;]+;base64,/, ""), "base64");
@@ -107,12 +118,12 @@ async function tryVoiceRSS(text: string, language: string, accent: string, speed
 async function tryHuggingFace(text: string, language: string, key: string): Promise<Buffer> {
   const lang = HF_LANG[language] ?? "eng";
   let lastErr: unknown;
-  // Retry once after 3s — HF free tier often 503s on cold model start
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetchWithTimeout(
         `https://api-inference.huggingface.co/models/facebook/mms-tts-${lang}`,
-        { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify({ inputs: text }) },
+        { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, 
+          body: JSON.stringify({ inputs: text }) },
         20000
       );
       if (!res.ok) {
@@ -132,20 +143,32 @@ async function tryHuggingFace(text: string, language: string, key: string): Prom
 
 async function tryElevenLabs(text: string, voiceId: string, speed: number, emotion: string, key: string): Promise<Buffer> {
   const elId = EL_VOICES[voiceId] ?? "ErXwobaYiN019PkySvjV";
-  const res  = await fetchWithTimeout(`https://api.elevenlabs.io/v1/text-to-speech/${elId}`,
-    { method: "POST", headers: { "xi-api-key": key, "Content-Type": "application/json", Accept: "audio/mpeg" },
-      body: JSON.stringify({ text, model_id: "eleven_multilingual_v2",
-        voice_settings: { stability: emotion === "calm" ? 0.85 : 0.55, similarity_boost: 0.80,
-          style: emotion === "excited" ? 0.85 : emotion === "sad" ? 0.15 : 0.50,
-          use_speaker_boost: true, speed: clamp(speed, 0.7, 1.2) }}), }, 15000);
-  if (!res.ok) throw new Error(`ElevenLabs ${res.status}: ${await res.text()}`);
-  return Buffer.from(await res.arrayBuffer());
+  const elevenlabs = new ElevenLabsClient({
+    apiKey: key,
+    timeoutInSeconds: 15,
+  });
+
+  const audio = await elevenlabs.textToSpeech.convert(elId, {
+    text,
+    modelId: "eleven_multilingual_v2",
+    outputFormat: "mp3_44100_128",
+    voiceSettings: {
+      stability: emotion === "calm" ? 0.85 : 0.55,
+      similarityBoost: 0.8,
+      style: emotion === "excited" ? 0.85 : emotion === "sad" ? 0.15 : 0.5,
+      useSpeakerBoost: true,
+      speed: clamp(speed, 0.7, 1.2),
+    },
+  });
+
+  return Buffer.from(await new Response(audio).arrayBuffer());
 }
 
 async function tryOpenAI(text: string, voiceId: string, gender: string, emotion: string, speed: number, key: string): Promise<Buffer> {
   const res = await fetchWithTimeout("https://api.openai.com/v1/audio/speech",
     { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "tts-1-hd", input: text, voice: oaiVoice(gender, emotion), response_format: "mp3", speed: clamp(speed, 0.25, 4.0) }) }, 15000);
+      body: JSON.stringify({ model: "tts-1-hd", input: text, voice: oaiVoice(gender, emotion), 
+        response_format: "mp3", speed: clamp(speed, 0.25, 4.0) }) }, 15000);
   if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
   return Buffer.from(await res.arrayBuffer());
 }
@@ -157,14 +180,18 @@ async function tryGoogle(text: string, language: string, accent: string, gender:
     { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ input: { ssml: buildSSML(text, speed, pitch, emotion) },
         voice: { languageCode: langCode, ssmlGender },
-        audioConfig: { audioEncoding: "MP3", speakingRate: clamp(speed, 0.25, 4.0), pitch: (pitch - 1) * 20, volumeGainDb: emotion === "loud" ? 6 : emotion === "whisper" ? -6 : 0 } }) }, 15000);
+        audioConfig: { audioEncoding: "MP3", speakingRate: clamp(speed, 0.25, 4.0), 
+          pitch: (pitch - 1) * 20, volumeGainDb: emotion === "loud" ? 6 : emotion === "whisper" ? -6 : 0 } }) }, 15000);
   const data = await res.json();
   if (!data.audioContent) throw new Error(`Google TTS: ${data.error?.message ?? "no audio"}`);
   return Buffer.from(data.audioContent, "base64");
 }
 
-// ── Main handler ─────────────────────────────────────────────
+// ── MAIN POST HANDLER (ONLY ONE) ──
 export async function POST(req: NextRequest) {
+  const planGuard = await requireMinimumPlan(req, "pro");
+  if (planGuard) return planGuard;
+
   try {
     const body     = await req.json();
     const text     = String(body.text     ?? "").trim();
@@ -179,7 +206,16 @@ export async function POST(req: NextRequest) {
     if (!text) return NextResponse.json({ error: "Text is empty" }, { status: 400 });
     if (text.length > 3000) return NextResponse.json({ error: "Text too long (max 3000)" }, { status: 400 });
 
-    const keys   = getKeys();
+    const identity = readBillingIdentity(req);
+    const userKeys = identity.userId ? await getUserApiKeys(identity.userId) : null;
+
+    const keys = getKeys({
+      voicerss: userKeys?.voicerssApiKey,
+      huggingface: userKeys?.huggingfaceApiKey,
+      elevenlabs: userKeys?.elevenlabsApiKey,
+      openai: userKeys?.openaiApiKey,
+      google: userKeys?.googleTtsKey,
+    });
     const errors: string[] = [];
     let   buffer: Buffer | null = null;
     let   provider = "none";
@@ -196,29 +232,55 @@ export async function POST(req: NextRequest) {
     ].filter(Boolean) as Array<{ name: string; fn: () => Promise<Buffer> }>;
 
     if (keys.voicerss && !isVRSupported) {
-      errors.push(`voicerss: skipped — "${language}" is not supported by VoiceRSS (their service has no Urdu/Persian voices)`);
+      errors.push(`voicerss: skipped — "${language}" is not supported by VoiceRSS`);
     }
 
     for (const attempt of attempts) {
       if (buffer) break;
-      try { buffer = await attempt.fn(); provider = attempt.name; }
-      catch (e) { errors.push(`${attempt.name}: ${e instanceof Error ? e.message : String(e)}`); }
+      try { 
+        buffer = await attempt.fn(); 
+        provider = attempt.name; 
+      } catch (e) { 
+        errors.push(`${attempt.name}: ${e instanceof Error ? e.message : String(e)}`); 
+      }
     }
 
     console.log("[Voice API] result:", { provider, success: !!buffer, errors });
 
+    // ── If no audio generated ──
     if (!buffer) {
       const hasKeys = Object.values(keys).some(Boolean);
+      
       if (hasKeys) {
-        return NextResponse.json({ error: "All TTS providers failed", details: errors }, { status: 500 });
+        Sentry.captureMessage(`Voice API: all providers failed — ${errors.join(" | ")}`, "error");
+        return NextResponse.json(
+          { 
+            error: "All TTS providers failed", 
+            details: errors,
+            provider: "none",
+            success: false
+          }, 
+          { status: 500 }
+        );
       }
+      
+      // No valid keys found - show setup guide
       const envStatus: Record<string, string> = {};
       for (const [k, v] of Object.entries(keys)) {
-        const envKey = { voicerss:"VOICERSS_API_KEY", huggingface:"HUGGINGFACE_API_KEY", elevenlabs:"ELEVENLABS_API_KEY", openai:"OPENAI_API_KEY", google:"GOOGLE_TTS_KEY" }[k]!;
+        const envKey = { 
+          voicerss:"VOICERSS_API_KEY", 
+          huggingface:"HUGGINGFACE_API_KEY", 
+          elevenlabs:"ELEVENLABS_API_KEY", 
+          openai:"OPENAI_API_KEY", 
+          google:"GOOGLE_TTS_KEY" 
+        }[k]!;
         envStatus[envKey] = process.env[envKey] ? (v ? "✅ valid" : "⚠️ set but invalid") : "❌ missing";
       }
+      
       return NextResponse.json({
-        audio: null, demo: true, provider: "none",
+        audio: null, 
+        demo: true, 
+        provider: "none",
         message: "No valid TTS API key found. Add at least one to .env.local",
         envStatus,
         setupGuide: {
@@ -231,19 +293,37 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ audio: `data:audio/mpeg;base64,${buffer.toString("base64")}`, provider, language, voice: voiceId });
+    // ── Success — return audio ──
+    return NextResponse.json({ 
+      audio: `data:audio/mpeg;base64,${buffer.toString("base64")}`, 
+      provider, 
+      language, 
+      voice: voiceId,
+      success: true
+    });
 
   } catch (err) {
+    Sentry.captureException(err);
     console.error("Voice API unhandled:", err);
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Internal error" }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Internal error" }, 
+      { status: 500 }
+    );
   }
 }
 
+// ── GET handler ──
 export async function GET() {
   const keys = getKeys();
   return NextResponse.json({
     status: "ok",
-    available: { voicerss: !!keys.voicerss, huggingface: !!keys.huggingface, elevenlabs: !!keys.elevenlabs, openai: !!keys.openai, google: !!keys.google },
+    available: { 
+      voicerss: !!keys.voicerss, 
+      huggingface: !!keys.huggingface, 
+      elevenlabs: !!keys.elevenlabs, 
+      openai: !!keys.openai, 
+      google: !!keys.google 
+    },
     note: "VoiceRSS does not support Urdu/Persian — those languages route to HuggingFace/Google automatically",
   });
 }

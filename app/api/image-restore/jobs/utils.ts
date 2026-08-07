@@ -15,15 +15,15 @@ export function jobFilePath(id: string) {
   return path.join(JOB_DIR, `${id}.json`);
 }
 
-export async function writeJob(id: string, payload: any) {
+export async function writeJob(id: string, payload: unknown) {
   await ensureJobDir();
   await fs.writeFile(jobFilePath(id), JSON.stringify(payload, null, 2), "utf-8");
 }
 
-export async function readJob(id: string) {
+export async function readJob<T = unknown>(id: string): Promise<T | null> {
   try {
     const txt = await fs.readFile(jobFilePath(id), "utf-8");
-    return JSON.parse(txt);
+    return JSON.parse(txt) as T;
   } catch (e) {
     return null;
   }

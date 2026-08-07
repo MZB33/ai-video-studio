@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
-import ComingSoonBlock from "@/components/shared/ComingSoonBlock";
 
 const SUB_TOOLS = [
   {
@@ -21,7 +20,7 @@ const SUB_TOOLS = [
     name: "سین بہ سین کہانی",
     desc: "ہر سین مکمل تفصیل",
     free: false,
-    soon: true,
+    soon: false,
     features: ["ہر سین کا وقت", "مقام کی تفصیل", "کردار کے عمل", "ماحول کی وضاحت"],
   },
   {
@@ -30,7 +29,7 @@ const SUB_TOOLS = [
     name: "کردار تجزیہ",
     desc: "ہر کردار کا مکمل تعارف",
     free: false,
-    soon: true,
+    soon: false,
     features: ["کردار کی شخصیت", "تمام مکالمے", "کردار کا سفر", "دیگر کرداروں سے تعلق"],
   },
   {
@@ -39,7 +38,7 @@ const SUB_TOOLS = [
     name: "مکمل اسٹوری",
     desc: "ایک بار چلائیں — پوری کہانی",
     free: false,
-    soon: true,
+    soon: false,
     features: ["آغاز، عروج، انجام", "مرکزی خیال", "ذیلی کہانیاں", "پیغام و نتیجہ"],
   },
   {
@@ -48,7 +47,7 @@ const SUB_TOOLS = [
     name: "نئی اسٹوری بنائیں",
     desc: "پرانی بنیاد — نئی تخلیق",
     free: false,
-    soon: true,
+    soon: false,
     features: ["اصل کہانی بدلیں", "نئے کردار شامل کریں", "خاتمہ بدلیں", "انوکھا زاویہ"],
   },
   {
@@ -75,7 +74,7 @@ const SUB_TOOLS = [
     name: "ویڈیو سے اسکرپٹ",
     desc: "مکمل لکھا اسکرپٹ",
     free: false,
-    soon: true,
+    soon: false,
     features: ["اسکرین پلے فارمیٹ", "کردار کے نام", "سین ہیڈنگ", "PDF ڈاؤنلوڈ"],
   },
 ];
@@ -262,17 +261,6 @@ export default function VideoIntelligencePage() {
 
       {/* منتخب ٹول */}
       {activeTool && (
-        activeTool.soon ? (
-          <ComingSoonBlock
-            emoji={activeTool.emoji}
-            title={activeTool.name}
-            subtitle="This powerful feature is under development."
-            urduTitle={activeTool.name}
-            urduSubtitle="یہ فیچر تیار کیا جا رہا ہے"
-            accentColor="#4c1d95"
-            features={activeTool.features}
-          />
-        ) : (
           <div
             style={{
               background: "rgba(255,255,255,0.97)",
@@ -299,7 +287,6 @@ export default function VideoIntelligencePage() {
                   key={i}
                   style={{
                     fontSize: "11px",
-                    color: "#374151",
                     padding: "5px 0",
                     direction: "rtl",
                     fontFamily: "serif",
@@ -331,7 +318,6 @@ export default function VideoIntelligencePage() {
               🚀 شروع کریں
             </button>
           </div>
-        )
       )}
 
       <BottomNav active="tools" onNavigate={(href) => router.push(href)} />

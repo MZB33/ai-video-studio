@@ -1,10 +1,37 @@
 import { NextResponse } from "next/server";
+import { requireMinimumPlan } from "@/lib/billing-guard";
+import { readBillingIdentity } from "@/lib/billing-auth";
+import { getUserApiKeys } from "@/lib/user-api-keys";
 
-const Replicate = require("replicate").default;
+import Replicate from "replicate";
+
+type VideoPayload = {
+  url: string;
+  format: "gif" | "mp4";
+  duration: number;
+  size: string;
+  source: "mock" | "replicate" | "fallback";
+};
+
+function toPayload(video: VideoPayload, mode: "mock" | "fallback" | "live", message: string) {
+  return {
+    video: video.url,
+    videoMeta: video,
+    mode,
+    message,
+  };
+}
 
 export async function POST(req: Request) {
+  const planGuard = await requireMinimumPlan(req, "pro");
+  if (planGuard) return planGuard;
+
   try {
-    const { image, prompt, mode = "normal" } = await req.json();
+    const { image, prompt } = await req.json();
+    const identity = readBillingIdentity(req);
+    const userKeys = identity.userId ? await getUserApiKeys(identity.userId) : null;
+    const replicateToken = userKeys?.replicateApiToken || process.env.REPLICATE_API_TOKEN;
+    const providerErrors: string[] = [];
 
     if (!image) {
       return NextResponse.json({ error: "Image is required" }, { status: 400 });
@@ -13,29 +40,30 @@ export async function POST(req: Request) {
     // 🟢 MOCK MODE - Return demo video for testing
     if (process.env.MODE === "mock") {
       console.log("🟢 [MOCK MODE] Video generation for:", prompt);
-      
-      // Return a simple animation/GIF placeholder
-      return NextResponse.json({
-        video: {
-          url: "https://media.giphy.com/media/26u41kyoUejjk6fJC/giphy.gif", // Demo video placeholder
+
+      return NextResponse.json(
+        toPayload(
+        {
+          url: "https://media.giphy.com/media/26u41kyoUejjk6fJC/giphy.gif",
           format: "gif",
           duration: 5,
-          size: "1024x576"
+          size: "1024x576",
+          source: "mock",
         },
-        mode: "mock",
-        message: "Using mock video generation for demonstration"
-      });
+        "mock",
+        "Using mock video generation for demonstration"
+      ));
     }
 
     // 🔵 REAL MODE - Try actual video generation services
 
     // Try Replicate first (if API token is available)
-    if (process.env.REPLICATE_API_TOKEN) {
+    if (replicateToken) {
       try {
         console.log("🎬 Attempting Replicate video generation...");
         
         const replicate = new Replicate({
-          auth: process.env.REPLICATE_API_TOKEN,
+          auth: replicateToken,
         });
 
         // Use Cog model for image-to-video conversion
@@ -48,18 +76,26 @@ export async function POST(req: Request) {
           }
         );
 
-        return NextResponse.json({
-          video: {
-            url: output?.[0] || output,
+        const url = Array.isArray(output) ? String(output[0] || "") : String(output || "");
+        if (!url) {
+          throw new Error("Replicate returned an empty video URL");
+        }
+
+        return NextResponse.json(
+          toPayload(
+          {
+            url,
             format: "mp4",
             duration: 6,
             size: "1024x576",
-            source: "replicate"
+            source: "replicate",
           },
-          message: "Video generated successfully with Replicate"
-        });
+          "live",
+          "Video generated successfully with Replicate"
+        ));
       } catch (replicateError) {
         const errMsg = replicateError instanceof Error ? replicateError.message : String(replicateError);
+        providerErrors.push(`replicate: ${errMsg}`);
         console.warn("⚠️ Replicate failed:", errMsg);
       }
     }
@@ -68,15 +104,19 @@ export async function POST(req: Request) {
     console.log("🎬 Using fallback video generation");
     
     return NextResponse.json({
-      video: {
+      ...toPayload(
+      {
         url: "https://media.giphy.com/media/26u41kyoUejjk6fJC/giphy.gif",
         format: "gif",
         duration: 5,
         size: "1024x576",
-        source: "fallback"
+        source: "fallback",
       },
-      mode: "fallback",
-      message: "Video generation demo (Configure REPLICATE_API_TOKEN for full features)"
+      "fallback",
+      "Video generation demo (Configure REPLICATE_API_TOKEN for full features)"
+      ),
+      providerErrors,
+      success: true,
     });
 
   } catch (error) {

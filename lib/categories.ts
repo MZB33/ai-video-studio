@@ -115,6 +115,7 @@ export const imageCategory: Category = {
     { id: "handmade-art",       name: "ہینڈ میڈ آرٹ",      nameEn: "Handmade Art",          description: "واٹر کلر، سکیچ، آئل پینٹنگ",           icon: "ti-brush",         status: "free", route: "/api/image/handmade" },
     { id: "cartoon-art",        name: "کارٹون آرٹ",         nameEn: "Cartoon Art",           description: "Anime، Chibi، Comic style",              icon: "ti-mood-smile",    status: "free", route: "/api/image/cartoon" },
     { id: "prompt-to-image",    name: "پرامپٹ سے تصویر",   nameEn: "Text to Image",         description: "لکھیں اور تصویر پائیں",                 icon: "ti-wand",          status: "free", route: "/api/image/generate" },
+    { id: "nano-banana-pro-free", name: "نانو بنانا پرو فری", nameEn: "NANO BANANA PRO FREE", description: "AI image shortcut opened from the app", icon: "ti-banana", status: "free", route: "/tools/nano-banana-pro-free" },
     { id: "background-remover", name: "بیک گراؤنڈ ریموور", nameEn: "Background Remover",    description: "ایک کلک میں پس منظر ہٹائیں",           icon: "ti-scissors",      status: "free", route: "/api/background" },
     { id: "logo-designer",      name: "لوگو ڈیزائنر",      nameEn: "Logo Designer",         description: "برانڈ، بزنس، پرسنل لوگو",               icon: "ti-color-picker",  status: "free", route: "/api/image/logo" },
     { id: "poster-banner",      name: "پوسٹر و بینر",      nameEn: "Poster & Banner",       description: "سوشل میڈیا، پرنٹ، ڈیجیٹل",             icon: "ti-layout",        status: "free", route: "/api/image/poster" },

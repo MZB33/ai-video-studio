@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/ui/BottomNav";
-import ComingSoonBlock from "@/components/shared/ComingSoonBlock";
+import ToolWorkbench from "@/components/shared/ToolWorkbench";
 
 export default function BusinessPage() {
   const router = useRouter();
@@ -12,13 +12,20 @@ export default function BusinessPage() {
       <div style={{ marginBottom: "1.5rem", paddingTop: "1rem" }}>
         <button onClick={() => router.back()} style={{ background: "rgba(255,255,255,0.2)", border: "none", padding: "8px 16px", borderRadius: 40, color: "white", cursor: "pointer", marginBottom: "1rem" }}>← Back</button>
         <h1 style={{ color: "white", margin: 0, fontSize: "1.8rem" }}>📊 Business Suite</h1>
-        <p style={{ color: "rgba(255,255,255,0.8)", marginTop: "0.25rem" }}>Coming Soon</p>
+        <p style={{ color: "rgba(255,255,255,0.8)", marginTop: "0.25rem" }}>Business planning workspace</p>
       </div>
 
-      <ComingSoonBlock
-        title="📊 Business Suite"
-        description="AI business tools are under development. Soon you'll be able to create business plans, marketing copy, invoices, and more."
-        icon="📊"
+      <ToolWorkbench
+        primaryLabel="Business idea or product"
+        secondaryLabel="Target market and constraints"
+        primaryPlaceholder="Example: Online Urdu learning platform for remote workers"
+        secondaryPlaceholder="Audience, pricing range, channels, monthly budget..."
+        ctaLabel="Generate business pack"
+        templates={[
+          "Plan {index}: Build {primary} for segment '{secondary}'. Focus on one measurable outcome per month and define acquisition channels before scaling.",
+          "Offer {index}: Position {primary} as a clear value promise. Primary customer pain point: {secondary}. Include a low-risk trial and a premium tier.",
+          "Execution {index}: Week 1 research, Week 2 prototype, Week 3 launch test, Week 4 review. Keep KPI dashboard tied to {primary} and context '{secondary}'.",
+        ]}
       />
 
       <BottomNav active="tools" onNavigate={(href) => router.push(href)} />

@@ -10,6 +10,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "home", label: "Home", icon: "🏠", href: "/" },
   { id: "tools", label: "AI Tools", icon: "✨", href: "/ai-tools" },
+  { id: "pricing", label: "Pricing", icon: "💳", href: "/pricing" },
   { id: "workspace", label: "My Work", icon: "📁", href: "/workspace" },
   { id: "profile", label: "Profile", icon: "👤", href: "/profile" },
 ];

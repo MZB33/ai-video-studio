@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
+import { requireMinimumPlan } from "@/lib/billing-guard";
 
 export async function POST(req: Request) {
+  const planGuard = await requireMinimumPlan(req, "pro");
+  if (planGuard) return planGuard;
+
   try {
     const formData = await req.formData();
     const tool = formData.get("tool") as string;

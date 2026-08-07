@@ -8,21 +8,16 @@ export default function Base64EncoderDecoderPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"encode" | "decode">("encode");
   const [input, setInput] = useState("Hello world");
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
 
-  useMemo(() => {
+  const computed = useMemo(() => {
     try {
       if (mode === "encode") {
-        setOutput(btoa(unescape(encodeURIComponent(input))));
-      } else {
-        const decoded = decodeURIComponent(escape(atob(input)));
-        setOutput(decoded);
+        return { output: btoa(unescape(encodeURIComponent(input))), error: "" };
       }
-      setError("");
+      const decoded = decodeURIComponent(escape(atob(input)));
+      return { output: decoded, error: "" };
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid input");
-      setOutput("");
+      return { output: "", error: err instanceof Error ? err.message : "Invalid input" };
     }
   }, [mode, input]);
 
@@ -38,7 +33,11 @@ export default function Base64EncoderDecoderPage() {
         <div style={{ display: "grid", gap: "1rem", marginBottom: "1rem" }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontWeight: 600 }}>
             Mode
-            <select value={mode} onChange={(e) => setMode(e.target.value as any)} style={{ width: "100%", padding: "0.95rem 1rem", borderRadius: 16, border: "1px solid #d1d5db", fontSize: "1rem" }}>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as "encode" | "decode")}
+              style={{ width: "100%", padding: "0.95rem 1rem", borderRadius: 16, border: "1px solid #d1d5db", fontSize: "1rem" }}
+            >
               <option value="encode">Encode</option>
               <option value="decode">Decode</option>
             </select>
@@ -50,11 +49,11 @@ export default function Base64EncoderDecoderPage() {
           </label>
         </div>
 
-        {error && <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 16, background: "#fee2e2", color: "#b91c1c" }}>{error}</div>}
+        {computed.error && <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 16, background: "#fee2e2", color: "#b91c1c" }}>{computed.error}</div>}
 
         <div style={{ marginTop: "1.5rem", padding: "1.25rem", borderRadius: 20, background: "#f8fafc", border: "1px solid #e2e8f0", fontFamily: "monospace" }}>
           <div style={{ fontSize: "0.9rem", color: "#4b5563", marginBottom: 8 }}>Output</div>
-          <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{output || "Output will appear here"}</div>
+          <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{computed.output || "Output will appear here"}</div>
         </div>
       </div>
 

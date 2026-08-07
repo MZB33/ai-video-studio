@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
+import { requireMinimumPlan } from "@/lib/billing-guard";
+import { readBillingIdentity } from "@/lib/billing-auth";
+import { getUserApiKeys } from "@/lib/user-api-keys";
 
-const Replicate = require("replicate").default;
+import Replicate from "replicate";
 
 export async function POST(req: Request) {
+  const planGuard = await requireMinimumPlan(req, "pro");
+  if (planGuard) return planGuard;
+
   try {
     const { sourceImage, targetImage } = await req.json();
+    const identity = readBillingIdentity(req);
+    const userKeys = identity.userId ? await getUserApiKeys(identity.userId) : null;
+    const replicateToken = userKeys?.replicateApiToken || process.env.REPLICATE_API_TOKEN;
 
     if (!sourceImage || !targetImage) {
       return NextResponse.json(
@@ -25,26 +34,30 @@ export async function POST(req: Request) {
     }
 
     // 🔵 REAL MODE - Try Replicate face swapping
-    if (process.env.REPLICATE_API_TOKEN) {
+    if (replicateToken) {
       try {
         console.log("🎬 Attempting face swap with Replicate...");
         
         const replicate = new Replicate({
-          auth: process.env.REPLICATE_API_TOKEN,
+          auth: replicateToken,
         });
 
         // Use LivePortrait model for face swapping
         const output = await replicate.run(
           "facebookresearch/llava-v1.5-7b:9125b03abedffd4e10f0fb8b9ad88017a2407f5a9b952ee0581563b11b3f617a",
           {
-            image: sourceImage,
-            target: targetImage,
+            input: {
+              image: sourceImage,
+              target: targetImage,
+            },
           }
         );
 
+        const result = Array.isArray(output) ? String(output[0] || "") : String(output || "");
+
         return NextResponse.json({
           success: true,
-          result: output?.[0] || output,
+          result,
           source: "replicate",
           message: "Face swap completed successfully"
         });

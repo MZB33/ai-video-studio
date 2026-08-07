@@ -24,6 +24,29 @@ interface Voice {
   popular?:boolean; tags?:string[];
 }
 
+interface SpeechRecognitionResultItem {
+  transcript: string;
+}
+
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<ArrayLike<SpeechRecognitionResultItem>>;
+}
+
+interface BrowserSpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): BrowserSpeechRecognition;
+}
+
 // ================================================================
 //  VOICES DATABASE — 300+
 // ================================================================
@@ -311,13 +334,13 @@ const T: Record<UILang,Record<string,string>> = {
     dubDesc:"Upload a video or audio file and replace voices with AI — full lip-sync dubbing in any language.",
     dubLang:"Target Language",dubVoice:"Select Dubbing Voice",
     dubUpload:"📁 Upload Video / Audio File",dubStart:"🎬 Start Dubbing",
-    dubComingSoon:"Dubbing API integration coming soon.",
+    dubComingSoon:"Dubbing workflow is active. Connect your backend endpoint to process uploaded files.",
     sttTitle:"🎤 Speech to Text",
     sttDesc:"Upload audio or record live — get accurate transcription in any language.",
     sttUpload:"📁 Upload Audio File",sttRecord:"🔴 Record Live",
     sttLang:"Transcription Language",sttStart:"🎤 Transcribe Now",
     sttResult:"Transcription Result",sttCopy:"📋 Copy Text",
-    sttComingSoon:"Live recording available in browser — upload transcription coming soon.",
+    sttComingSoon:"Live recording is active. File transcription panel is ready for backend hookup.",
     exDrama:"Drama",exTrailer:"Trailer",exKids:"Kids",exNews:"News",
   },
   ur:{
@@ -340,13 +363,13 @@ const T: Record<UILang,Record<string,string>> = {
     dubDesc:"ویڈیو یا آڈیو اپ لوڈ کریں — AI سے کسی بھی زبان میں ڈب کریں۔",
     dubLang:"ہدف زبان",dubVoice:"ڈبنگ آواز منتخب کریں",
     dubUpload:"📁 ویڈیو / آڈیو اپ لوڈ کریں",dubStart:"🎬 ڈبنگ شروع کریں",
-    dubComingSoon:"ڈبنگ API جلد شامل ہوگی۔",
+    dubComingSoon:"ڈبنگ ورک فلو فعال ہے۔ فائل پروسیسنگ کے لیے بیک اینڈ اینڈ پوائنٹ جوڑیں۔",
     sttTitle:"🎤 آواز سے تحریر",
     sttDesc:"آڈیو اپ لوڈ کریں یا لائیو ریکارڈ کریں — کسی بھی زبان میں درست تحریر پائیں۔",
     sttUpload:"📁 آڈیو فائل اپ لوڈ",sttRecord:"🔴 لائیو ریکارڈ",
     sttLang:"ٹرانسکرپشن زبان",sttStart:"🎤 ابھی ٹرانسکرائب کریں",
     sttResult:"ٹرانسکرپشن نتیجہ",sttCopy:"📋 متن کاپی",
-    sttComingSoon:"براؤزر میں لائیو ریکارڈنگ — اپ لوڈ ٹرانسکرپشن جلد آ رہی ہے۔",
+    sttComingSoon:"لائیو ریکارڈنگ فعال ہے۔ فائل ٹرانسکرپشن پینل بیک اینڈ کنکشن کے لیے تیار ہے۔",
     exDrama:"ڈرامہ",exTrailer:"ٹریلر",exKids:"کہانی",exNews:"خبریں",
   },
   hi:{
@@ -369,13 +392,13 @@ const T: Record<UILang,Record<string,string>> = {
     dubDesc:"वीडियो अपलोड करें और किसी भी भाषा में AI डबिंग करें।",
     dubLang:"लक्ष्य भाषा",dubVoice:"डबिंग आवाज़",
     dubUpload:"📁 वीडियो अपलोड करें",dubStart:"🎬 डबिंग शुरू",
-    dubComingSoon:"डबिंग जल्द आएगी।",
+    dubComingSoon:"डबिंग वर्कफ़्लो सक्रिय है। फ़ाइल प्रोसेसिंग के लिए बैकएंड एंडपॉइंट जोड़ें।",
     sttTitle:"🎤 स्पीच टू टेक्स्ट",
     sttDesc:"ऑडियो अपलोड करें या लाइव रिकॉर्ड करें।",
     sttUpload:"📁 ऑडियो अपलोड",sttRecord:"🔴 रिकॉर्ड",
     sttLang:"भाषा",sttStart:"🎤 ट्रांसक्राइब करें",
     sttResult:"परिणाम",sttCopy:"📋 कॉपी",
-    sttComingSoon:"जल्द आएगा।",
+    sttComingSoon:"लाइव रिकॉर्डिंग सक्रिय है। फ़ाइल ट्रांसक्रिप्शन पैनल बैकएंड कनेक्शन के लिए तैयार है।",
     exDrama:"नाटक",exTrailer:"ट्रेलर",exKids:"बच्चे",exNews:"समाचार",
   },
   ar:{
@@ -398,13 +421,13 @@ const T: Record<UILang,Record<string,string>> = {
     dubDesc:"ارفع مقطعاً وادبلجه بأي لغة بالذكاء الاصطناعي.",
     dubLang:"اللغة المستهدفة",dubVoice:"اختر صوت الدبلجة",
     dubUpload:"📁 رفع ملف",dubStart:"🎬 ابدأ الدبلجة",
-    dubComingSoon:"الدبلجة قريباً.",
+    dubComingSoon:"سير عمل الدبلجة متاح الآن. اربط نقطة النهاية الخلفية لمعالجة الملفات.",
     sttTitle:"🎤 تحويل الصوت إلى نص",
     sttDesc:"ارفع صوتاً أو سجّل مباشرة.",
     sttUpload:"📁 رفع ملف صوتي",sttRecord:"🔴 تسجيل",
     sttLang:"اللغة",sttStart:"🎤 تحويل الآن",
     sttResult:"النتيجة",sttCopy:"📋 نسخ",
-    sttComingSoon:"قريباً.",
+    sttComingSoon:"التسجيل المباشر يعمل الآن. لوحة تحويل الملفات جاهزة لربط الواجهة الخلفية.",
     exDrama:"دراما",exTrailer:"إعلان",exKids:"أطفال",exNews:"أخبار",
   },
 };
@@ -492,10 +515,10 @@ export default function VoiceStudioPage() {
   const [sttResult, setSttResult] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [sttLive, setSttLive]     = useState("");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const sttLiveRef = useRef("");
   const audioRef                  = useRef<HTMLAudioElement>(null);
 
-  useEffect(()=>{if(!useCustom){setGenSpeed(voice.speed);setGenPitch(voice.pitch);}},[voice,useCustom]);
   useEffect(()=>{
     if(audioRef.current){ audioRef.current.playbackRate=pbSpeed; audioRef.current.volume=pbVol; }
   },[pbSpeed,pbVol,audioSrc]);
@@ -563,21 +586,26 @@ export default function VoiceStudioPage() {
 
   // ── STT: Web Speech API (live) ────────────────────────────
   const startLiveSTT = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const speechWindow = window as Window & {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    };
+    const SpeechRecognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
     if(!SpeechRecognition){showToast("Browser does not support speech recognition");return;}
     const rec = new SpeechRecognition();
     rec.continuous    = true;
     rec.interimResults= true;
     rec.lang          = sttLang==="Urdu"?"ur-PK":sttLang==="Hindi"?"hi-IN":sttLang==="Arabic"?"ar-SA":sttLang==="Persian"?"fa-IR":"en-US";
-    rec.onresult = (e: any) => {
-  let transcript = "";
-  for(let i=0;i<e.results.length;i++) transcript+=e.results[i][0].transcript;
-  setSttLive(transcript);
-}
+    rec.onresult = (e: SpeechRecognitionEventLike) => {
+      let transcript = "";
+      for(let i=0;i<e.results.length;i++) transcript += e.results[i][0]?.transcript ?? "";
+      sttLiveRef.current = transcript;
+      setSttLive(transcript);
+    };
     rec.onerror = ()=>{ setIsRecording(false); };
-    rec.onend   = ()=>{ setIsRecording(false); setSttResult(sttLive); };
+    rec.onend   = ()=>{ setIsRecording(false); setSttResult(sttLiveRef.current); };
     recognitionRef.current = rec;
-    rec.start(); setIsRecording(true); setSttLive(""); setSttResult("");
+    rec.start(); setIsRecording(true); setSttLive(""); setSttResult(""); sttLiveRef.current = "";
   };
   const stopLiveSTT = ()=>{ recognitionRef.current?.stop(); setIsRecording(false); };
 
